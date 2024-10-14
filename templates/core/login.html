@@ -1,0 +1,63 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="min-h-screen flex items-center justify-center bg-grey-500">
+  <div class="bg-white shadow-lg rounded-lg p-10 max-w-md w-full">
+    <h2 class="text-3xl font-semibold text-center text-gray-800 mb-6">เข้าสู่ระบบ</h2>
+    <p class="text-center text-sm text-gray-500 mb-6">เข้าสู่ระบบบัญชีของคุณใน Ran domAroi</p>
+
+    <!-- แสดงข้อผิดพลาดทั่วๆ ไป (non-field errors) -->
+    {% if form.non_field_errors %}
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative mb-4">
+        <p>ข้อผิดพลาด: {{ form.non_field_errors }}</p>
+      </div>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <!-- Username Field -->
+      <div class="flex items-center border-b border-gray-300 py-2">
+        <span class="text-gray-500 pr-2">
+          <i class="fas fa-user-circle"></i>
+        </span>
+        <input type="text" name="username" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="ชื่อผู้ใช้" value="{{ form.username.value|default_if_none:'' }}">
+      </div>
+      <!-- แสดง error ของ field username -->
+      {% if form.username.errors %}
+        <p class="text-red-500 text-sm">ชื่อผู้ใช้ไม่ถูกต้อง: {{ form.username.errors }}</p>
+      {% endif %}
+
+      <!-- Password Field -->
+      <div class="flex items-center border-b border-gray-300 py-2">
+        <span class="text-gray-500 pr-2">
+          <i class="fas fa-lock"></i>
+        </span>
+        <input type="password" name="password" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="รหัสผ่าน">
+      </div>
+      <!-- แสดง error ของ field password -->
+      {% if form.password.errors %}
+        <p class="text-red-500 text-sm">รหัสผ่านไม่ถูกต้อง: {{ form.password.errors }}</p>
+      {% endif %}
+
+      <!-- Submit Button -->
+      <div>
+        <button type="submit" class="w-full py-3 px-6 bg-orange-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-orange-600 transition duration-300 ease-in-out transform hover:scale-105">
+          เข้าสู่ระบบ
+        </button>
+      </div>
+    </form>
+
+    <p class="text-center text-sm text-gray-600 mt-6">
+      <a href="{% url 'password_reset' %}" class="text-orange-500 hover:underline">ลืมรหัสผ่าน?</a>
+    </p>
+
+    <p class="text-center text-sm text-gray-600 mt-6">
+      ยังไม่มีบัญชี?
+      <a href="{% url 'register' %}" class="text-orange-500 hover:underline">สมัครสมาชิก</a>
+    </p>
+
+    <a href="{% url 'home' %}" class="block text-center text-sm text-gray-500 hover:underline mt-4">กลับไปที่หน้าหลัก</a>
+  </div>
+</div>
+{% endblock %}
