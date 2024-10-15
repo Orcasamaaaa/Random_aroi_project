@@ -52,6 +52,18 @@
                                 <a href="{% url 'profile_view' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     ข้อมูลส่วนตัว
                                 </a>
+
+                                <!-- ตรวจสอบว่าผู้ใช้มีร้านอาหารหรือไม่ -->
+                                {% if restaurant %}
+                                    <a href="{% url 'restaurant_detail' restaurant.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        ร้านอาหารของฉัน
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'restaurant_create' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        สร้างร้านอาหาร
+                                    </a>
+                                {% endif %}
+
                                 <form method="post" action="{% url 'logout' %}">
                                     {% csrf_token %}
                                     <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">

@@ -1,0 +1,103 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <h2 class="text-3xl font-semibold text-center text-gray-800 mb-6">สร้างร้านอาหารใหม่</h2>
+      <p class="text-center text-sm text-gray-500 mb-6">กรอกข้อมูลร้านอาหารของคุณ</p>
+    </div>
+
+    <!-- ฟอร์มสร้างร้านอาหาร -->
+    <form method="post" class="space-y-4" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- ชื่อร้านอาหาร -->
+      <div class="flex items-center border-b border-gray-300 py-2">
+        <span class="text-gray-500 pr-2">
+          <i class="fas fa-store"></i>
+        </span>
+        <input type="text" id="name" name="name" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="ชื่อร้านอาหาร" value="{{ form.name.value|default_if_none:'' }}">
+      </div>
+      {% if form.name.errors %}
+        <p class="text-red-500 text-sm">ชื่อร้านอาหารไม่ถูกต้อง: {{ form.name.errors }}</p>
+      {% endif %}
+
+      <!-- รายละเอียดร้านอาหาร -->
+      <div class="flex items-center border-b border-gray-300 py-2">
+        <span class="text-gray-500 pr-2">
+          <i class="fas fa-info-circle"></i>
+        </span>
+        <textarea id="description" name="description" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="รายละเอียดร้านอาหาร">{{ form.description.value|default_if_none:'' }}</textarea>
+      </div>
+      {% if form.description.errors %}
+        <p class="text-red-500 text-sm">รายละเอียดร้านอาหารไม่ถูกต้อง: {{ form.description.errors }}</p>
+      {% endif %}
+
+      <!-- ที่ตั้งร้านอาหาร -->
+      <div class="flex items-center border-b border-gray-300 py-2">
+        <span class="text-gray-500 pr-2">
+          <i class="fas fa-map-marker-alt"></i>
+        </span>
+        <input type="text" id="location" name="location" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="ที่ตั้งร้านอาหาร" value="{{ form.location.value|default_if_none:'' }}">
+      </div>
+      {% if form.location.errors %}
+        <p class="text-red-500 text-sm">ที่ตั้งร้านอาหารไม่ถูกต้อง: {{ form.location.errors }}</p>
+      {% endif %}
+
+      <!-- เบอร์ติดต่อ -->
+      <div class="flex items-center border-b border-gray-300 py-2">
+        <span class="text-gray-500 pr-2">
+          <i class="fas fa-phone"></i>
+        </span>
+        <input type="text" id="contact_info" name="contact_info" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="เบอร์ติดต่อ" value="{{ form.contact_info.value|default_if_none:'' }}">
+      </div>
+      {% if form.contact_info.errors %}
+        <p class="text-red-500 text-sm">เบอร์ติดต่อไม่ถูกต้อง: {{ form.contact_info.errors }}</p>
+      {% endif %}
+
+      <!-- เวลาเปิดปิดร้าน -->
+      <div class="flex items-center border-b border-gray-300 py-2">
+        <span class="text-gray-500 pr-2">
+          <i class="fas fa-clock"></i>
+        </span>
+        <input type="text" id="opening_hours" name="opening_hours" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="เวลาเปิดปิดร้าน" value="{{ form.opening_hours.value|default_if_none:'' }}">
+      </div>
+      {% if form.opening_hours.errors %}
+        <p class="text-red-500 text-sm">เวลาเปิดปิดร้านไม่ถูกต้อง: {{ form.opening_hours.errors }}</p>
+      {% endif %}
+
+      <!-- ลิงก์ Social Media -->
+      <div class="flex items-center border-b border-gray-300 py-2">
+        <span class="text-gray-500 pr-2">
+          <i class="fas fa-link"></i>
+        </span>
+        <input type="text" id="social_media" name="social_media" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="ลิงก์ Social Media (ถ้ามี)" value="{{ form.social_media.value|default_if_none:'' }}">
+      </div>
+      {% if form.social_media.errors %}
+        <p class="text-red-500 text-sm">ลิงก์ Social Media ไม่ถูกต้อง: {{ form.social_media.errors }}</p>
+      {% endif %}
+
+      <!-- รูปภาพร้านอาหาร -->
+      <div class="flex items-center border-b border-gray-300 py-2">
+        <span class="text-gray-500 pr-2">
+          <i class="fas fa-image"></i>
+        </span>
+        <input type="file" id="images" name="images" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" accept="image/*">
+      </div>
+      {% if form.images.errors %}
+        <p class="text-red-500 text-sm">รูปภาพไม่ถูกต้อง: {{ form.images.errors }}</p>
+      {% endif %}
+
+      <!-- Submit Button -->
+      <div>
+        <button type="submit" class="w-full py-3 px-6 bg-orange-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-orange-600 transition duration-300 ease-in-out transform hover:scale-105">
+          บันทึกร้านอาหาร
+        </button>
+      </div>
+    </form>
+
+    <a href="{% url 'restaurant_list' %}" class="block text-center text-sm text-gray-500 hover:underline mt-4">กลับไปที่รายการร้านอาหาร</a>
+  </div>
+</div>
+{% endblock %}

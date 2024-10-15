@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Profile
+from .models import *
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -46,4 +46,18 @@ class ProfileForm(forms.ModelForm):
 
         return profile
 
+class RestaurantForm(forms.ModelForm):
+    class Meta:
+        model = Restaurant
+        fields = ['name', 'description', 'location', 'contact_info', 'opening_hours', 'social_media', 'images']
 
+class RestaurantImageForm(forms.ModelForm):
+    class Meta:
+        model = RestaurantImage
+        fields = ['image']
+
+
+class FoodForm(forms.ModelForm):
+    class Meta:
+        model = Food
+        fields = ['name', 'description', 'price', 'category', 'subcategory', 'image']

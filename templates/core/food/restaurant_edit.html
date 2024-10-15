@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="container mx-auto py-10">
+    <div class="bg-white shadow-md rounded-lg p-8 max-w-4xl mx-auto">
+        <h1 class="text-3xl font-extrabold text-orange-500 mb-8 text-center">แก้ไขข้อมูลร้านอาหาร</h1>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-8">
+            {% csrf_token %}
+
+            <!-- รูปโปรไฟล์ร้าน -->
+            <div class="text-center">
+                <label class="block text-gray-700 font-semibold mb-2">รูปโปรไฟล์ร้าน (ปัจจุบัน)</label>
+                <div class="flex justify-center items-center">
+                    <img src="{{ restaurant.images.url }}" alt="โปรไฟล์ร้าน" id="currentProfilePic" class="w-32 h-32 object-cover rounded-full shadow-lg">
+                </div>
+            </div>
+
+            <div class="text-center mt-6">
+                <label class="block text-gray-700 font-semibold mb-2">อัพโหลดรูปโปรไฟล์ร้านใหม่</label>
+                <input type="file" name="images" id="profileImageInput" class="w-full md:w-1/2 border border-gray-300 rounded-lg p-2 mx-auto">
+                <!-- พรีวิวรูปภาพใหม่ที่กำลังจะอัปโหลด -->
+                <div class="mt-4">
+                    <img id="profileImagePreview" src="#" alt="พรีวิวรูปโปรไฟล์ใหม่" class="w-32 h-32 object-cover rounded-full hidden mx-auto">
+                </div>
+            </div>
+
+            <!-- ฟิลด์ข้อมูลร้าน -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- ข้อมูลทั่วไปของร้านอาหาร -->
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-gray-700 font-semibold">ชื่อร้านอาหาร</label>
+                        {{ form.name }}
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold">รายละเอียดร้านอาหาร</label>
+                        {{ form.description }}
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold">ที่ตั้ง</label>
+                        {{ form.location }}
+                    </div>
+                </div>
+
+                <!-- เบอร์ติดต่อและเวลาเปิด-ปิด -->
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-gray-700 font-semibold">เบอร์ติดต่อ</label>
+                        {{ form.contact_info }}
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold">เวลาเปิด-ปิด</label>
+                        {{ form.opening_hours }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ฟิลด์รูปภาพและโซเชียลมีเดีย -->
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 font-semibold">ลิงก์ Social Media</label>
+                    {{ form.social_media }}
+                </div>
+            </div>
+
+            <!-- อัพโหลดรูปบรรยากาศร้านเพิ่มเติม -->
+            <div class="text-center">
+                <label class="block text-gray-700 font-semibold mb-2">อัพโหลดรูปบรรยากาศร้านเพิ่มเติม</label>
+                {{ image_form.image }} <!-- ฟิลด์อัพโหลดรูปภาพบรรยากาศ -->
+                <div id="additionalImagesPreview" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4"></div>
+            </div>
+
+            <!-- ปุ่มบันทึก -->
+            <div class="text-center">
+                <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition transform hover:scale-105">
+                    บันทึกข้อมูล
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript สำหรับการพรีวิวรูปโปรไฟล์และรูปบรรยากาศเพิ่มเติม -->
+<script>
+    // พรีวิวรูปโปรไฟล์ใหม่ที่อัปโหลด
+    document.getElementById('profileImageInput').addEventListener('change', function(event) {
+        const preview = document.getElementById('profileImagePreview');
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.classList.remove('hidden'); // แสดงรูปพรีวิว
+        };
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // พรีวิวรูปบรรยากาศร้านเพิ่มเติมที่อัปโหลด
+    document.getElementById('image_form_image').addEventListener('change', function(event) {
+        const previewContainer = document.getElementById('additionalImagesPreview');
+        previewContainer.innerHTML = ''; // ล้างพรีวิวก่อนหน้า
+        const files = event.target.files;
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.classList.add('w-32', 'h-32', 'object-cover', 'rounded-lg');
+                previewContainer.appendChild(img); // แสดงรูปพรีวิว
+            };
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+</script>
+{% endblock %}

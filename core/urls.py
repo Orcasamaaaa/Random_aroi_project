@@ -21,20 +21,24 @@ urlpatterns = [
     # แก้ไขโปรไฟล์
     path('profile/edit/', views.profile_edit, name='profile_edit'),  # ชื่อ profile_edit
 
-
-    #สุ่มอาหาร
+    # สุ่มอาหาร
     path('random-food/', views.random_food, name='random_food'),
 
-    #ร้านอาหาร
+    # ร้านอาหาร
     path('restaurants/', views.restaurant_list, name='restaurant_list'),
+    path('restaurant/create/', views.restaurant_create, name='restaurant_create'),
+    path('restaurant/<int:id>/', views.restaurant_detail, name='restaurant_detail'),
+    path('restaurant/<int:id>/edit/', views.restaurant_edit, name='restaurant_edit'),
+    path('restaurant/<int:restaurant_id>/delete_image/<int:image_id>/', views.delete_image, name='delete_image'),
 
+    # เพิ่ม URL สำหรับการจัดการเมนูอาหาร
+    path('restaurant/<int:restaurant_id>/add_food/', views.add_food, name='add_food'),  # เพิ่มเมนูอาหาร
+    path('restaurant/<int:restaurant_id>/edit_food/<int:food_id>/', views.edit_food, name='edit_food'),  # แก้ไขเมนูอาหาร
+    path('restaurant/<int:restaurant_id>/delete_food/<int:food_id>/', views.delete_food, name='delete_food'),  # ลบเมนูอาหาร
 
-    #กระทู้
+    # กระทู้
     path('forum/', views.forum, name='forum'),
-
-
-
 ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

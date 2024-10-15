@@ -1,3 +1,39 @@
-<a href="{% url 'restaurant_list' %}" class="text-gray-500 hover:border-orange-500 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium">
-    ร้านอาหาร
-</a>
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="min-h-screen py-6 flex flex-col justify-center sm:py-12">
+  <div class="relative py-3 sm:max-w-xl sm:mx-auto">
+    <h1 class="text-center text-3xl font-semibold mb-4">รายชื่อร้านอาหารทั้งหมด</h1>
+
+    <!-- แสดงรายการร้านอาหาร -->
+    <div class="space-y-4">
+      {% for restaurant in restaurants %}
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">{{ restaurant.name }}</h3>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">{{ restaurant.description }}</p>
+        </div>
+        <div class="border-t border-gray-200">
+          <dl>
+            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt class="text-sm font-medium text-gray-500">ที่ตั้ง</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ restaurant.location }}</dd>
+            </div>
+            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt class="text-sm font-medium text-gray-500">เบอร์ติดต่อ</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ restaurant.contact_info }}</dd>
+            </div>
+            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt class="text-sm font-medium text-gray-500">เวลาเปิด-ปิด</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ restaurant.opening_hours }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-center">ยังไม่มีร้านอาหารในระบบ</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
