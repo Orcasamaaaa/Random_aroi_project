@@ -28,13 +28,13 @@
                         </a>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                        <a href="{% url 'home' %}" class="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-orange-500 text-sm font-medium">
+                        <a href="{% url 'home' %}" class="inline-flex items-center px-1 pt-1 border-b-2 {% if request.resolver_match.url_name == 'home' %}border-orange-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-orange-500{% endif %} text-sm font-medium">
                             หน้าหลัก
                         </a>
-                        <a href="{% url 'restaurant_list' %}" class="text-gray-500 hover:border-orange-500 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium">
+                        <a href="{% url 'restaurant_list' %}" class="inline-flex items-center px-1 pt-1 border-b-2 {% if request.resolver_match.url_name == 'restaurant_list' %}border-orange-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-orange-500{% endif %} text-sm font-medium">
                             ร้านอาหาร
                         </a>
-                        <a href="{% url 'forum' %}" class="text-gray-500 hover:border-orange-500 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium">
+                        <a href="{% url 'forum' %}" class="inline-flex items-center px-1 pt-1 border-b-2 {% if request.resolver_match.url_name == 'forum' %}border-orange-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-orange-500{% endif %} text-sm font-medium">
                             กระทู้
                         </a>
                     </div>
@@ -53,7 +53,6 @@
                                     ข้อมูลส่วนตัว
                                 </a>
 
-                                <!-- ตรวจสอบว่าผู้ใช้มีร้านอาหารหรือไม่ -->
                                 {% if restaurant %}
                                     <a href="{% url 'restaurant_detail' restaurant.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         ร้านอาหารของฉัน

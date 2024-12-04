@@ -1,0 +1,56 @@
+[
+    {
+        "model": "core.category",
+        "pk": 1,
+        "fields": {
+            "name": "อาหาร"
+        }
+    },
+    {
+        "model": "core.category",
+        "pk": 2,
+        "fields": {
+            "name": "เครื่องดื่ม"
+        }
+    },
+    {
+        "model": "core.subcategory",
+        "pk": 1,
+        "fields": {
+            "category": 1,
+            "name": "อาหารจีน"
+        }
+    },
+    {
+        "model": "core.subcategory",
+        "pk": 2,
+        "fields": {
+            "category": 1,
+            "name": "อาหารไทย"
+        }
+    },
+    {
+        "model": "core.subcategory",
+        "pk": 3,
+        "fields": {
+            "category": 1,
+            "name": "อาหารอินเดีย"
+        }
+    },
+    {
+        "model": "core.subcategory",
+        "pk": 4,
+        "fields": {
+            "category": 2,
+            "name": "เครื่องดื่มร้อน"
+        }
+    },
+    {
+        "model": "core.subcategory",
+        "pk": 5,
+        "fields": {
+            "category": 2,
+            "name": "เครื่องดื่มเย็น"
+        }
+    }
+]

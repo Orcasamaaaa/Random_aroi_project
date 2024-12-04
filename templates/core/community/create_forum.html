@@ -1,0 +1,16 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="container mx-auto py-10 px-4">
+    <h1 class="text-3xl font-bold text-orange-600 mb-6">สร้างกระทู้ใหม่</h1>
+    <form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="mt-4">
+            <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg">
+                สร้างกระทู้
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

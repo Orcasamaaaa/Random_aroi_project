@@ -33,27 +33,22 @@ class RestaurantImage(models.Model):
     def __str__(self):
         return f'{self.restaurant.name} - Image'
 
-    def __str__(self):
-        return self.name
 
-    def __str__(self):
-        return self.name
-
-
-
-# โมเดลหมวดหมู่และหมวดหมู่ย่อยของอาหาร
+# หมวดหมู่หลัก
 class Category(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
 
+# หมวดหมู่ย่อยที่เชื่อมกับหมวดหมู่หลัก
 class SubCategory(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
     name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.category.name} - {self.name}'
+        return self.name
+
 
 # โมเดลอาหาร ที่เชื่อมกับร้านอาหาร
 class Food(models.Model):
@@ -83,18 +78,19 @@ class Review(models.Model):
 
 
 # โมเดลกระทู้
-class Thread(models.Model):
+class Forum(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    image = models.ImageField(upload_to='forum_images/', null=True, blank=True)
 
     def __str__(self):
         return self.title
 
 # โมเดลความคิดเห็นในกระทู้
-class Comment(models.Model):
-    thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
+class Forum_comment(models.Model):
+    Forum = models.ForeignKey(Forum, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -105,3 +101,10 @@ class Comment(models.Model):
 
 
 
+class ChosenFood(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    food = models.ForeignKey('Food', on_delete=models.CASCADE)
+    chosen_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} chose {self.food.name}"

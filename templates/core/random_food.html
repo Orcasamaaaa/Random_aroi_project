@@ -1,12 +1,62 @@
 {% extends 'core/base.html' %}
 
 {% block main %}
-<div class="max-w-lg mx-auto mt-10 p-6 bg-white rounded-lg shadow-md text-center">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">อาหารที่คุณสุ่มได้คือ:</h1>
-    <p class="text-4xl font-bold text-orange-500 mb-8">{{ food }}</p>
-    <a href="{% url 'random_food' %}" class="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105">
-        สุ่มใหม่
-    </a>
+<div class="container mx-auto py-12 px-6">
+    <h1 class="text-4xl font-extrabold text-orange-600 text-center mb-12">สุ่มอาหาร</h1>
+
+    <!-- ฟอร์มสำหรับการกรอง -->
+    <form method="get" class="bg-white shadow-md rounded-lg p-8 mb-10 max-w-3xl mx-auto border border-gray-200">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="flex flex-col">
+                {{ form.category.label_tag }}
+                {{ form.category }}
+            </div>
+            <div class="flex flex-col">
+                {{ form.subcategory.label_tag }}
+                {{ form.subcategory }}
+            </div>
+            <div class="flex flex-col">
+                {{ form.min_price.label_tag }}
+                {{ form.min_price }}
+            </div>
+            <div class="flex flex-col">
+                {{ form.max_price.label_tag }}
+                {{ form.max_price }}
+            </div>
+        </div>
+        <div class="flex justify-center">
+            <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
+                กรองและสุ่มอาหาร
+            </button>
+        </div>
+    </form>
+
+    <!-- แสดงผลอาหารที่สุ่มได้ -->
+    {% if food %}
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto border border-gray-200">
+        <div class="h-56 w-full bg-gray-100 flex items-center justify-center">
+            {% if food.image %}
+            <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-full object-cover">
+            {% else %}
+            <span class="text-gray-500">ไม่มีรูปภาพ</span>
+            {% endif %}
+        </div>
+        <div class="p-8 text-center">
+            <h2 class="text-2xl font-bold text-orange-600 mb-3">{{ food.name }}</h2>
+            <p class="text-gray-700 text-md mb-4">{{ food.description }}</p>
+            <p class="text-lg font-semibold text-gray-800">ราคา: {{ food.price }} บาท</p>
+
+            <!-- ปุ่มเลือกอาหารชนิดนี้ -->
+            <form method="post" action="{% url 'choose_food' food.id %}">
+                {% csrf_token %}
+                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105 mt-4">
+                    เลือกอาหารชนิดนี้
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-gray-500 text-center mt-12">ไม่พบอาหารที่ตรงกับเงื่อนไขการกรอง</p>
+    {% endif %}
 </div>
 {% endblock %}
-

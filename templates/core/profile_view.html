@@ -2,15 +2,15 @@
 {% load static %}
 
 {% block main %}
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-10">
+<div class="min-h-screen flex items-center justify-center  py-10">
   <div class="bg-white shadow-lg rounded-lg overflow-hidden w-full max-w-2xl">
     <div class="bg-gradient-to-r from-orange-500 via-yellow-400 to-orange-500 h-48 flex items-center justify-center">
       <!-- แสดงรูปโปรไฟล์ (ถ้ามี) -->
-       {% if profile.profile_picture %}
-    <img id="profile_picture_preview" src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="w-32 h-32 rounded-full border-4 border-white shadow-lg">
-    {% else %}
-    <img id="profile_picture_preview" src="{% static 'images/default_profile.png' %}" alt="Default Profile Picture" class="w-32 h-32 rounded-full border-4 border-white shadow-lg">
-    {% endif %}
+      {% if profile.profile_picture %}
+      <img id="profile_picture_preview" src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="w-32 h-32 rounded-full border-4 border-white shadow-lg">
+      {% else %}
+      <img id="profile_picture_preview" src="{% static 'images/default_profile.png' %}" alt="Default Profile Picture" class="w-32 h-32 rounded-full border-4 border-white shadow-lg">
+      {% endif %}
     </div>
     <div class="px-6 py-8">
       <!-- ข้อมูลส่วนตัว -->

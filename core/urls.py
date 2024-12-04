@@ -34,10 +34,15 @@ urlpatterns = [
     # เพิ่ม URL สำหรับการจัดการเมนูอาหาร
     path('restaurant/<int:restaurant_id>/add_food/', views.add_food, name='add_food'),  # เพิ่มเมนูอาหาร
     path('restaurant/<int:restaurant_id>/edit_food/<int:food_id>/', views.edit_food, name='edit_food'),  # แก้ไขเมนูอาหาร
-    path('restaurant/<int:restaurant_id>/delete_food/<int:food_id>/', views.delete_food, name='delete_food'),  # ลบเมนูอาหาร
+    path('restaurant/<int:restaurant_id>/delete_food/<int:food_id>/', views.delete_food, name='delete_food'),
+    path('choose_food/<int:food_id>/', views.choose_food, name='choose_food'),# ลบเมนูอาหาร
 
     # กระทู้
-    path('forum/', views.forum, name='forum'),
+    path('forum/', views.forum_list, name='forum'),
+    path('forum/create/', views.create_forum, name='forum_create'),
+    path('forum/<int:forum_id>/', views.forum_detail, name='forum_detail'),
+    #path('forum/<int:forum_id>/edit/', views.edit_forum, name='edit_forum'),
+   # path('forum/<int:forum_id>/delete/', views.delete_forum, name='delete_forum'),
 ]
 
 if settings.DEBUG:

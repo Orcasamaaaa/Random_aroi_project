@@ -61,3 +61,31 @@ class FoodForm(forms.ModelForm):
     class Meta:
         model = Food
         fields = ['name', 'description', 'price', 'category', 'subcategory', 'image']
+
+
+class FoodFilterForm(forms.Form):
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        label="ประเภทอาหาร"
+    )
+    subcategory = forms.ModelChoiceField(
+        queryset=SubCategory.objects.all(),
+        required=False,
+        label="หมวดหมู่ย่อย"
+    )
+    min_price = forms.DecimalField(
+        required=False,
+        min_value=0,
+        label="ราคาขั้นต่ำ"
+    )
+    max_price = forms.DecimalField(
+        required=False,
+        min_value=0,
+        label="ราคาสูงสุด"
+    )
+
+class ForumForm(forms.ModelForm):
+    class Meta:
+        model =Forum
+        fields = ['title','content','image']

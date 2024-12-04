@@ -1,21 +1,23 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
-from .forms import RegisterForm, ProfileForm, RestaurantForm,RestaurantImageForm,FoodForm
+from .forms import *
 import random
-from .models import Profile, Restaurant,RestaurantImage,Food
+from .models import *
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.contrib import messages
 
 # หน้าแรก
 def home(request):
-    # ตรวจสอบว่าผู้ใช้มีร้านอาหารหรือไม่
-    restaurant = None
-    if request.user.is_authenticated:
-        restaurant = Restaurant.objects.filter(owner=request.user).first()
-
-    return render(request, 'core/home.html', {'restaurant': restaurant})
-
+    restaurants = Restaurant.objects.all()
+    foods = Food.objects.all()
+    forums = Forum.objects.all()
+    return render(request, 'core/home.html', {
+        'restaurants': restaurants,
+        'foods': foods,
+        'forums': forums,
+    })
 
 # ลงทะเบียนผู้ใช้
 def register(request):
@@ -51,11 +53,52 @@ def profile_edit(request):
 
 
 # ฟังก์ชันสำหรับสุ่มอาหาร
-def random_food(request):
-    foods = ['ข้าวมันไก่', 'ก๋วยเตี๋ยว', 'ส้มตำ', 'ข้าวผัด', 'ข้าวหน้าไก่']
-    random_choice = random.choice(foods)
-    return render(request, 'core/random_food.html', {'food': random_choice})
 
+def random_food(request):
+    form = FoodFilterForm(request.GET or None)
+    food = None  # ตั้งค่าเริ่มต้นของ food เป็น None
+
+    # ตรวจสอบว่าฟอร์มถูกส่งข้อมูลมาและใช้เงื่อนไขในการกรอง
+    if form.is_valid() and request.GET:
+        foods = Food.objects.all()
+
+        # กรองข้อมูลตามเงื่อนไขที่ผู้ใช้เลือก
+        category = form.cleaned_data.get('category')
+        subcategory = form.cleaned_data.get('subcategory')
+        min_price = form.cleaned_data.get('min_price')
+        max_price = form.cleaned_data.get('max_price')
+
+        if category:
+            foods = foods.filter(category=category)
+        if subcategory:
+            foods = foods.filter(subcategory=subcategory)
+        if min_price is not None:
+            foods = foods.filter(price__gte=min_price)
+        if max_price is not None:
+            foods = foods.filter(price__lte=max_price)
+
+        # สุ่มอาหารจากผลลัพธ์ที่กรองแล้ว
+        if foods.exists():
+            food = random.choice(foods)
+
+    # ตรวจสอบว่ามีการส่งข้อมูลบันทึกการเลือกอาหารจากผู้ใช้หรือไม่
+    if request.method == 'POST' and food:
+        # บันทึกการเลือกอาหารของผู้ใช้
+        UserChoice.objects.create(user=request.user, food=food)
+        messages.success(request, f'คุณได้เลือกอาหาร {food.name} แล้ว')
+        return redirect('home')  # เปลี่ยนเส้นทางไปหน้าหลักหลังจากเลือกอาหารเสร็จ
+
+    return render(request, 'core/random_food.html', {'food': food, 'form': form})
+
+
+@login_required
+def choose_food(request, food_id):
+    food = get_object_or_404(Food, id=food_id)
+
+    # สร้าง ChosenFood สำหรับผู้ใช้คนปัจจุบัน
+    ChosenFood.objects.create(user=request.user, food=food)
+
+    return redirect('home')
 
 # รายการร้านอาหาร
 def restaurant_list(request):
@@ -66,8 +109,12 @@ def restaurant_list(request):
 # รายละเอียดร้านอาหาร
 @login_required
 def restaurant_detail(request, id):
-    restaurant = get_object_or_404(Restaurant, id=id, owner=request.user)
-    return render(request, 'core/food/restaurant_detail.html', {'restaurant': restaurant})
+    restaurant = get_object_or_404(Restaurant, id=id)
+    foods = Food.objects.filter(restaurant=restaurant)  # ดึงเมนูอาหารที่เชื่อมกับร้านอาหารนี้
+    return render(request, 'core/food/restaurant_detail.html', {
+        'restaurant': restaurant,
+        'foods': foods,  # ส่งข้อมูลอาหารไปยัง template
+    })
 
 
 # สร้างร้านอาหารใหม่
@@ -176,5 +223,26 @@ def delete_food(request, restaurant_id, food_id):
 
     return redirect('restaurant_detail', id=restaurant_id)
 # ฟอรัม (กระทู้)
-def forum(request):
-    return render(request, 'core/forum.html')
+def forum_list(request):
+    forums = Forum.objects.all().order_by('-created_at')  # ดึงข้อมูลเรียงตามวันที่สร้าง
+    return render(request, 'core/community/forum.html', {'forums': forums})
+
+
+@login_required
+def create_forum(request):
+    if request.method == "POST":
+        form = ForumForm(request.POST, request.FILES)
+        if form.is_valid():
+            forum = form.save(commit=False)
+            forum.user = request.user  # ผูกกระทู้กับผู้ใช้งาน
+            forum.save()
+            return redirect('forum')  # กลับไปยังหน้ารายการกระทู้
+    else:
+        form = ForumForm()
+
+    return render(request, 'core/community/create_forum.html', {'form': form})
+
+def forum_detail(request, forum_id):
+    forum = get_object_or_404(Forum, id=forum_id)
+    return render(request, 'core/community/forum_detail.html', {'forum': forum})
+

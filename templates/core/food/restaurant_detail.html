@@ -3,8 +3,8 @@
 {% block main %}
 <div class="container mx-auto py-10 px-4">
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <!-- ข้อมูลร้านและรูปโปรไฟลร้าน -->
         <div class="p-6 flex flex-col md:flex-row items-center">
-            <!-- รูปโปรไฟล์ร้านอยู่ด้านบนซ้าย -->
             <div class="w-32 h-32 md:w-48 md:h-48 flex-shrink-0">
                 {% if restaurant.images %}
                 <img src="{{ restaurant.images.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover rounded-full shadow-lg">
@@ -14,8 +14,6 @@
                 </div>
                 {% endif %}
             </div>
-
-            <!-- ข้อมูลร้านอาหาร -->
             <div class="md:ml-6 mt-4 md:mt-0">
                 <h1 class="text-4xl font-bold text-orange-500 mb-4">{{ restaurant.name }}</h1>
                 <p class="text-gray-700 mb-4"><strong>รายละเอียดร้าน:</strong> {{ restaurant.description }}</p>
@@ -38,14 +36,23 @@
             </div>
         </div>
 
-        <!-- ส่วนแสดงภาพบรรยากาศร้านและเมนูอาหาร -->
+        <!-- ปุ่มแก้ไขข้อมูลร้าน -->
+        {% if request.user == restaurant.owner %}
+        <div class="p-6 text-right">
+            <a href="{% url 'restaurant_edit' restaurant.id %}" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600">
+                แก้ไขข้อมูลร้านอาหาร
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- ส่วนแสดงบรรยากาศร้าน -->
         {% if restaurant.additional_images.exists %}
         <div class="p-6">
-            <h2 class="text-2xl font-bold text-gray-700 mb-4">รูปบรรยากาศร้านอาหาร</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">รูปบรรยากาศร้าน</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {% for image in restaurant.additional_images.all %}
-                <div class="relative">
-                    <div class="w-full h-48 bg-gray-200 rounded-lg overflow-hidden">
+                <div class="relative border rounded-lg overflow-hidden bg-gray-100">
+                    <div class="w-full h-32 bg-gray-200 rounded-lg overflow-hidden">
                         {% if image.image %}
                         <img src="{{ image.image.url }}" alt="บรรยากาศร้าน" class="w-full h-full object-cover">
                         {% else %}
@@ -54,11 +61,11 @@
                         </div>
                         {% endif %}
                     </div>
-                    <!-- ปุ่มลบรูปภาพสำหรับเจ้าของร้าน -->
+                    <!-- ปุ่มลบรูปบรรยากาศร้าน -->
                     {% if request.user == restaurant.owner %}
-                    <a href="{% url 'delete_image' restaurant.id image.id %}" class="absolute top-2 right-2 bg-red-500 text-white py-1 px-2 rounded-lg hover:bg-red-600">
+                    <button class="absolute top-2 right-2 bg-red-500 text-white py-1 px-2 rounded-lg hover:bg-red-600" onclick="confirmDelete('delete_image', '{{ restaurant.id }}', '{{ image.id }}')">
                         ลบ
-                    </a>
+                    </button>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -66,17 +73,87 @@
         </div>
         {% endif %}
 
-        <!-- ปุ่มแก้ไขและเพิ่มเมนูอาหารสำหรับเจ้าของร้าน -->
-        {% if request.user == restaurant.owner %}
-        <div class="p-6 flex justify-between items-center">
-            <a href="{% url 'restaurant_edit' restaurant.id %}" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600">
-                แก้ไขข้อมูลร้านและรูปภาพ
-            </a>
-            <a href="{% url 'add_food' restaurant.id %}" class="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600">
-                เพิ่มเมนูอาหาร
-            </a>
+        <!-- ส่วนแสดงเมนูอาหาร -->
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">เมนูอาหาร</h2>
+            {% if foods %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for food in foods %}
+                <!-- ใช้ DaisyUI Card -->
+                <div class="card w-full bg-base-100 shadow-xl relative">
+                    <figure class="h-48">
+                        {% if food.image %}
+                        <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <div class="flex items-center justify-center h-full text-gray-500">
+                            ไม่มีรูปภาพ
+                        </div>
+                        {% endif %}
+                    </figure>
+                    <div class="card-body">
+                        <h3 class="card-title text-lg font-semibold">{{ food.name }}</h3>
+                        <p class="text-gray-700 mb-2">{{ food.description }}</p>
+                        <p class="text-gray-700 mb-2"><strong>ราคา:</strong> {{ food.price }} บาท</p>
+                        <!-- แสดงหมวดหมู่และหมวดหมู่ย่อย -->
+                        <div class="card-actions justify-start">
+                            <div class="badge badge-outline">{{ food.category.name }}</div> <!-- หมวดหมู่ -->
+                            <div class="badge badge-outline">{{ food.subcategory.name }}</div> <!-- หมวดหมู่ย่อย -->
+                        </div>
+                    </div>
+                    <!-- ปุ่มลบเมนูอาหาร -->
+                    {% if request.user == restaurant.owner %}
+                    <button class="absolute top-2 right-2 bg-red-500 text-white py-1 px-2 rounded-lg hover:bg-red-600" onclick="confirmDelete('delete_food', '{{ restaurant.id }}', '{{ food.id }}')">
+                        ลบ
+                    </button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500">ไม่มีเมนูอาหาร</p>
+            {% endif %}
+
+            <!-- ปุ่มเพิ่มเมนูอาหาร -->
+            {% if request.user == restaurant.owner %}
+            <div class="mt-4 text-right">
+                <a href="{% url 'add_food' restaurant.id %}" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600">
+                    เพิ่มเมนูอาหาร
+                </a>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
+
     </div>
 </div>
+
+<!-- Modal Confirm Delete -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-xs">
+        <h2 class="text-xl font-semibold mb-4">ยืนยันการลบ</h2>
+        <p class="mb-4">คุณต้องการลบรายการนี้ใช่หรือไม่?</p>
+        <div class="flex justify-center space-x-4">
+            <button class="bg-gray-500 text-white py-2 px-4 rounded-lg" onclick="closeModal()">ยกเลิก</button>
+            <a id="confirmDeleteBtn" href="#" class="bg-red-500 text-white py-2 px-4 rounded-lg">ลบ</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(action, restaurantId, itemId) {
+        let deleteUrl = '';
+
+        if (action === 'delete_image') {
+            deleteUrl = "{% url 'delete_image' restaurant.id 0 %}".replace('0', itemId);
+        } else if (action === 'delete_food') {
+            deleteUrl = "{% url 'delete_food' restaurant.id 0 %}".replace('0', itemId);
+        }
+
+        document.getElementById('confirmDeleteBtn').setAttribute('href', deleteUrl);
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+</script>
 {% endblock %}
