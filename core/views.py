@@ -35,7 +35,16 @@ def register(request):
 @login_required
 def profile_view(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
-    return render(request, 'core/profile_view.html', {'profile': profile})
+
+    # ดึงรายการอาหารที่ชอบและไม่ชอบ
+    liked_foods = LikeDislikeFood.objects.filter(user=request.user, liked=True)
+    disliked_foods = LikeDislikeFood.objects.filter(user=request.user, liked=False)
+
+    return render(request, 'core/profile_view.html', {
+        'profile': profile,
+        'liked_foods': liked_foods,
+        'disliked_foods': disliked_foods,
+    })
 
 
 # แก้ไขโปรไฟล์
@@ -56,39 +65,46 @@ def profile_edit(request):
 
 def random_food(request):
     form = FoodFilterForm(request.GET or None)
-    food = None  # ตั้งค่าเริ่มต้นของ food เป็น None
+    food = None  # อาหารที่สุ่มได้
 
-    # ตรวจสอบว่าฟอร์มถูกส่งข้อมูลมาและใช้เงื่อนไขในการกรอง
     if form.is_valid() and request.GET:
+        # กรองข้อมูลอาหารตามฟอร์ม
         foods = Food.objects.all()
 
-        # กรองข้อมูลตามเงื่อนไขที่ผู้ใช้เลือก
         category = form.cleaned_data.get('category')
-        subcategory = form.cleaned_data.get('subcategory')
         min_price = form.cleaned_data.get('min_price')
         max_price = form.cleaned_data.get('max_price')
 
         if category:
-            foods = foods.filter(category=category)
-        if subcategory:
-            foods = foods.filter(subcategory=subcategory)
+            foods = foods.filter(category__in=category)
         if min_price is not None:
             foods = foods.filter(price__gte=min_price)
         if max_price is not None:
             foods = foods.filter(price__lte=max_price)
 
-        # สุ่มอาหารจากผลลัพธ์ที่กรองแล้ว
+        # สุ่มอาหารจากผลลัพธ์
         if foods.exists():
             food = random.choice(foods)
 
-    # ตรวจสอบว่ามีการส่งข้อมูลบันทึกการเลือกอาหารจากผู้ใช้หรือไม่
+    # การจัดการ POST สำหรับการกดปุ่ม "ชอบ" และ "ไม่ชอบ"
     if request.method == 'POST' and food:
-        # บันทึกการเลือกอาหารของผู้ใช้
-        UserChoice.objects.create(user=request.user, food=food)
-        messages.success(request, f'คุณได้เลือกอาหาร {food.name} แล้ว')
-        return redirect('home')  # เปลี่ยนเส้นทางไปหน้าหลักหลังจากเลือกอาหารเสร็จ
+        if request.user.is_authenticated:
+            # กรณีที่ผู้ใช้ล็อกอิน
+            action = request.POST.get('action')
+            if action == 'like':
+                LikeDislikeFood.objects.update_or_create(user=request.user, food=food, defaults={'liked': True})
+                messages.success(request, f"คุณชอบอาหาร {food.name}!")
+            elif action == 'dislike':
+                LikeDislikeFood.objects.update_or_create(user=request.user, food=food, defaults={'liked': False})
+                messages.warning(request, f"คุณไม่ชอบอาหาร {food.name}!")
+            return redirect('random_food')
+        else:
+            # กรณีที่ผู้ใช้ไม่ได้ล็อกอิน
+            messages.info(request, "กรุณาล็อกอินเพื่อบันทึกความชอบหรือไม่ชอบอาหาร")
+            return redirect('random_food')
 
     return render(request, 'core/random_food.html', {'food': food, 'form': form})
+
 
 
 @login_required
@@ -188,8 +204,12 @@ def add_food(request, restaurant_id):
         form = FoodForm(request.POST, request.FILES)
         if form.is_valid():
             food = form.save(commit=False)
-            food.restaurant = restaurant
-            food.save()
+            food.restaurant = restaurant  # เชื่อมกับร้านอาหารที่เลือก
+            food.save()  # บันทึกข้อมูลอาหาร
+
+            # บันทึกข้อมูลใน ManyToManyField
+            form.save_m2m()
+
             return redirect('restaurant_detail', id=restaurant.id)
     else:
         form = FoodForm()

@@ -60,29 +60,34 @@ class RestaurantImageForm(forms.ModelForm):
 class FoodForm(forms.ModelForm):
     class Meta:
         model = Food
-        fields = ['name', 'description', 'price', 'category', 'subcategory', 'image']
+        fields = ['name', 'description', 'price', 'category', 'image']
+
+    # ใช้ MultipleChoiceField หรือ ModelMultipleChoiceField เพื่อรองรับหลายหมวดหมู่
+    category = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.all(),
+        widget=forms.CheckboxSelectMultiple,  # ใช้ Checkbox เพื่อให้เลือกหลายหมวดหมู่ได้
+        required=True
+    )
 
 
 class FoodFilterForm(forms.Form):
-    category = forms.ModelChoiceField(
+    category = forms.ModelMultipleChoiceField(
         queryset=Category.objects.all(),
         required=False,
-        label="ประเภทอาหาร"
-    )
-    subcategory = forms.ModelChoiceField(
-        queryset=SubCategory.objects.all(),
-        required=False,
-        label="หมวดหมู่ย่อย"
+        label="ประเภทอาหาร",
+        widget=forms.CheckboxSelectMultiple,  # ใช้ checkbox เพื่อให้เลือกหลายตัว
     )
     min_price = forms.DecimalField(
         required=False,
         min_value=0,
-        label="ราคาขั้นต่ำ"
+        label="ราคาขั้นต่ำ",
+        widget=forms.NumberInput(attrs={'step': '0.01'}),  # เพิ่ม step สำหรับราคาทศนิยม
     )
     max_price = forms.DecimalField(
         required=False,
         min_value=0,
-        label="ราคาสูงสุด"
+        label="ราคาสูงสุด",
+        widget=forms.NumberInput(attrs={'step': '0.01'}),  # เพิ่ม step สำหรับราคาทศนิยม
     )
 
 class ForumForm(forms.ModelForm):

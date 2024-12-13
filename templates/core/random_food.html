@@ -12,10 +12,6 @@
                 {{ form.category }}
             </div>
             <div class="flex flex-col">
-                {{ form.subcategory.label_tag }}
-                {{ form.subcategory }}
-            </div>
-            <div class="flex flex-col">
                 {{ form.min_price.label_tag }}
                 {{ form.min_price }}
             </div>
@@ -46,17 +42,50 @@
             <p class="text-gray-700 text-md mb-4">{{ food.description }}</p>
             <p class="text-lg font-semibold text-gray-800">ราคา: {{ food.price }} บาท</p>
 
-            <!-- ปุ่มเลือกอาหารชนิดนี้ -->
-            <form method="post" action="{% url 'choose_food' food.id %}">
+            <!-- ปุ่มชอบและไม่ชอบ -->
+            {% if user.is_authenticated %}
+            <form method="post" class="flex justify-center gap-4 mt-4">
                 {% csrf_token %}
-                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105 mt-4">
-                    เลือกอาหารชนิดนี้
+                <button type="submit" name="action" value="like" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
+                    ชอบ
+                </button>
+                <button type="submit" name="action" value="dislike" class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
+                    ไม่ชอบ
                 </button>
             </form>
+            {% else %}
+            <button onclick="openModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
+                กรุณาเข้าสู่ระบบ
+            </button>
+            {% endif %}
         </div>
     </div>
     {% else %}
     <p class="text-gray-500 text-center mt-12">ไม่พบอาหารที่ตรงกับเงื่อนไขการกรอง</p>
     {% endif %}
 </div>
+
+<!-- Modal -->
+<div id="loginModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">กรุณาเข้าสู่ระบบ</h2>
+        <p class="text-gray-600 mb-6">คุณต้องเข้าสู่ระบบเพื่อใช้งานฟังก์ชันนี้</p>
+        <a href="{% url 'login' %}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
+            เข้าสู่ระบบ
+        </a>
+        <a href="{% url 'register' %}" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105 ml-4">
+            สมัครสมาชิก
+        </a>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById('loginModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('loginModal').classList.add('hidden');
+    }
+</script>
 {% endblock %}

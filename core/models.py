@@ -42,13 +42,6 @@ class Category(models.Model):
         return self.name
 
 # หมวดหมู่ย่อยที่เชื่อมกับหมวดหมู่หลัก
-class SubCategory(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
-
 
 # โมเดลอาหาร ที่เชื่อมกับร้านอาหาร
 class Food(models.Model):
@@ -56,8 +49,7 @@ class Food(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='foods')
-    subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name='foods')
+    category = models.ManyToManyField(Category, related_name='foods')  # เปลี่ยนเป็น ManyToManyField
     image = models.ImageField(upload_to='food_images/', null=True, blank=True)  # รูปภาพอาหาร
 
     def __str__(self):
@@ -101,10 +93,9 @@ class Forum_comment(models.Model):
 
 
 
-class ChosenFood(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    food = models.ForeignKey('Food', on_delete=models.CASCADE)
-    chosen_at = models.DateTimeField(auto_now_add=True)
+class LikeDislikeFood(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='like_dislike_foods')
+    food = models.ForeignKey('Food', on_delete=models.CASCADE, related_name='likes_dislikes')
+    liked = models.BooleanField()  # True = ชอบ, False = ไม่ชอบ
+    timestamp = models.DateTimeField(auto_now_add=True)  # บันทึกเวลาที่ชอบ/ไม่ชอบ
 
-    def __str__(self):
-        return f"{self.user.username} chose {self.food.name}"
