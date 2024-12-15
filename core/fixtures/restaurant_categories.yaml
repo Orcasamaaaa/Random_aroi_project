@@ -1,0 +1,224 @@
+- model: core.restaurantcategory
+  pk: 1
+  fields:
+    name: อาหารจีน
+- model: core.restaurantcategory
+  pk: 2
+  fields:
+    name: อาหารญี่ปุ่น
+- model: core.restaurantcategory
+  pk: 3
+  fields:
+    name: อาหารนานาชาติ
+- model: core.restaurantcategory
+  pk: 4
+  fields:
+    name: อาหารฝรั่งเศส
+- model: core.restaurantcategory
+  pk: 5
+  fields:
+    name: อาหารฟิวชั่น
+- model: core.restaurantcategory
+  pk: 6
+  fields:
+    name: อาหารมุสลิม/ฮาลาล
+- model: core.restaurantcategory
+  pk: 7
+  fields:
+    name: อาหารอิตาเลียน
+- model: core.restaurantcategory
+  pk: 8
+  fields:
+    name: อาหารอินเดีย
+- model: core.restaurantcategory
+  pk: 9
+  fields:
+    name: อาหารอีสาน/ร้านส้มตำ
+- model: core.restaurantcategory
+  pk: 10
+  fields:
+    name: อาหารอเมริกัน
+- model: core.restaurantcategory
+  pk: 11
+  fields:
+    name: อาหารเกาหลี
+- model: core.restaurantcategory
+  pk: 12
+  fields:
+    name: อาหารเม็กซิกัน
+- model: core.restaurantcategory
+  pk: 13
+  fields:
+    name: อาหารเยอรมัน
+- model: core.restaurantcategory
+  pk: 14
+  fields:
+    name: อาหารเวียดนาม
+- model: core.restaurantcategory
+  pk: 15
+  fields:
+    name: อาหารเหนือ
+- model: core.restaurantcategory
+  pk: 16
+  fields:
+    name: อาหารใต้
+- model: core.restaurantcategory
+  pk: 17
+  fields:
+    name: อาหารไทย
+- model: core.restaurantcategory
+  pk: 18
+  fields:
+    name: ก๋วยเตี๋ยว
+- model: core.restaurantcategory
+  pk: 19
+  fields:
+    name: ของหวาน
+- model: core.restaurantcategory
+  pk: 20
+  fields:
+    name: ชานมไข่มุก
+- model: core.restaurantcategory
+  pk: 21
+  fields:
+    name: ชาบู/สุกี้ยากี้/หม้อไฟ
+- model: core.restaurantcategory
+  pk: 22
+  fields:
+    name: ซูชิ
+- model: core.restaurantcategory
+  pk: 23
+  fields:
+    name: ติ่มซำ
+- model: core.restaurantcategory
+  pk: 24
+  fields:
+    name: บุฟเฟ่ต์
+- model: core.restaurantcategory
+  pk: 25
+  fields:
+    name: ปิ้งย่าง
+- model: core.restaurantcategory
+  pk: 26
+  fields:
+    name: พิซซ่า
+- model: core.restaurantcategory
+  pk: 27
+  fields:
+    name: ฟาสต์ฟู้ด/จานด่วน
+- model: core.restaurantcategory
+  pk: 28
+  fields:
+    name: ราเมง
+- model: core.restaurantcategory
+  pk: 29
+  fields:
+    name: สเต๊ก
+- model: core.restaurantcategory
+  pk: 30
+  fields:
+    name: หมูกระทะ
+- model: core.restaurantcategory
+  pk: 31
+  fields:
+    name: อาหารคลีน/สลัด
+- model: core.restaurantcategory
+  pk: 32
+  fields:
+    name: อาหารจานเดียว
+- model: core.restaurantcategory
+  pk: 33
+  fields:
+    name: อาหารตามสั่ง
+- model: core.restaurantcategory
+  pk: 34
+  fields:
+    name: อาหารทะเล
+- model: core.restaurantcategory
+  pk: 35
+  fields:
+    name: อาหารมังสวิรัติ
+- model: core.restaurantcategory
+  pk: 36
+  fields:
+    name: อาหารเจ
+- model: core.restaurantcategory
+  pk: 37
+  fields:
+    name: อาหารเช้า
+- model: core.restaurantcategory
+  pk: 38
+  fields:
+    name: เครื่องดื่ม/น้ำผลไม้
+- model: core.restaurantcategory
+  pk: 39
+  fields:
+    name: เบอร์เกอร์
+- model: core.restaurantcategory
+  pk: 40
+  fields:
+    name: เบเกอรี/เค้ก
+- model: core.restaurantcategory
+  pk: 41
+  fields:
+    name: ไอศกรีม
+- model: core.restaurantcategory
+  pk: 42
+  fields:
+    name: Food Truck
+- model: core.restaurantcategory
+  pk: 43
+  fields:
+    name: กึ่งผับ/ร้านเหล้า/บาร์
+- model: core.restaurantcategory
+  pk: 44
+  fields:
+    name: คาราโอเกะ
+- model: core.restaurantcategory
+  pk: 45
+  fields:
+    name: คาเฟ่
+- model: core.restaurantcategory
+  pk: 46
+  fields:
+    name: บุฟเฟ่ต์โรงแรม
+- model: core.restaurantcategory
+  pk: 47
+  fields:
+    name: ผับ/เที่ยวกลางคืน
+- model: core.restaurantcategory
+  pk: 48
+  fields:
+    name: ร้านกาแฟ/ชา
+- model: core.restaurantcategory
+  pk: 49
+  fields:
+    name: ร้านข้าวต้ม
+- model: core.restaurantcategory
+  pk: 50
+  fields:
+    name: ร้านบนดาดฟ้า
+- model: core.restaurantcategory
+  pk: 51
+  fields:
+    name: ร้านริมน้ำ
+- model: core.restaurantcategory
+  pk: 52
+  fields:
+    name: ร้านไวน์
+- model: core.restaurantcategory
+  pk: 53
+  fields:
+    name: สตรีทฟู้ด/รถเข็น
+- model: core.restaurantcategory
+  pk: 54
+  fields:
+    name: อาหารกล่อง/ข้าวกล่อง
+- model: core.restaurantcategory
+  pk: 55
+  fields:
+    name: เดลิเวอรี
+- model: core.restaurantcategory
+  pk: 56
+  fields:
+    name: อิซากายะ

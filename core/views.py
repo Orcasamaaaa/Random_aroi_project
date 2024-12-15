@@ -1,13 +1,18 @@
+from django.contrib.messages import success
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.views.decorators.http import require_http_methods
+
 from .forms import *
 import random
 from .models import *
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.contrib import messages
-
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 # หน้าแรก
 def home(request):
     restaurants = Restaurant.objects.all()
@@ -198,21 +203,28 @@ def delete_image(request, restaurant_id, image_id):
 
 @login_required
 def add_food(request, restaurant_id):
+    # ดึงข้อมูลร้านอาหารที่เป็นเจ้าของโดย user
     restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
 
     if request.method == 'POST':
         form = FoodForm(request.POST, request.FILES)
         if form.is_valid():
             food = form.save(commit=False)
-            food.restaurant = restaurant  # เชื่อมกับร้านอาหารที่เลือก
+            food.restaurant = restaurant  # เชื่อมอาหารกับร้านอาหาร
             food.save()  # บันทึกข้อมูลอาหาร
 
-            # บันทึกข้อมูลใน ManyToManyField
+            # บันทึก ManyToManyField
             form.save_m2m()
 
-            return redirect('restaurant_detail', id=restaurant.id)
+            # เพิ่มข้อความแจ้งเตือนสำเร็จ
+            messages.success(request, "เพิ่มเมนูอาหารเรียบร้อยแล้ว!")
+            return redirect('restaurant_detail', restaurant_id=restaurant.id)
+        else:
+            messages.error(request, "เกิดข้อผิดพลาด กรุณาตรวจสอบข้อมูล.")
     else:
+        # ตั้งค่า queryset สำหรับ categories
         form = FoodForm()
+        form.fields['category'].queryset = Category.objects.all()
 
     return render(request, 'core/food/add_food.html', {'form': form, 'restaurant': restaurant})
 
@@ -262,7 +274,76 @@ def create_forum(request):
 
     return render(request, 'core/community/create_forum.html', {'form': form})
 
+
 def forum_detail(request, forum_id):
-    forum = get_object_or_404(Forum, id=forum_id)
+    forum = get_object_or_404(Forum, pk=forum_id)
     return render(request, 'core/community/forum_detail.html', {'forum': forum})
 
+
+
+def my_forums(request):
+    forums = Forum.objects.filter(user=request.user)  # แสดงกระทู้ของผู้ใช้ที่ล็อกอิน
+    return render(request, 'core/community/forum.html', {'forums': forums})
+
+@login_required
+def forum_edit(request, forum_id):
+    forum = get_object_or_404(Forum, id=forum_id, user=request.user)  # ตรวจสอบว่าผู้ใช้งานต้องเป็นเจ้าของกระทู้
+    if request.method == 'POST':
+        form = ForumForm(request.POST, request.FILES, instance=forum)
+        if form.is_valid():
+            form.save()
+            return redirect('forum_detail', forum_id=forum.id)
+    else:
+        form = ForumForm(instance=forum)
+    return render(request, 'core/community/forum_edit.html', {'form': form, 'forum': forum})
+
+
+@login_required
+def forum_delete(request, pk):
+    forum = get_object_or_404(Forum, pk=pk, user=request.user)  # ตรวจสอบเจ้าของกระทู้
+    if request.method == 'POST':
+        forum.delete()
+        return redirect('my_forums')  # กลับไปที่หน้ารายการกระทู้
+    return render(request, 'core/community/forum_delete.html', {'forum': forum})
+
+
+@csrf_protect
+def add_comment(request, forum_id):
+    if request.method == 'POST':
+        forum = get_object_or_404(Forum, id=forum_id)
+        content = request.POST.get('content', '').strip()
+
+        if content:
+            # สร้างคอมเมนต์ใหม่
+            ForumComment.objects.create(
+                forum=forum,
+                user=request.user,
+                content=content
+            )
+            # โหลดคอมเมนต์ทั้งหมดใหม่
+            comments = forum.comments.select_related('user__profile').order_by('-created_at')
+            html = render_to_string(
+                'core/partials/forum_comments.html',
+                {'comments': comments, 'request': request},  # ใส่ request เพื่อให้ template ใช้งานข้อมูล user
+                request=request
+            )
+            return JsonResponse({'html': html})
+        return JsonResponse({'error': 'Content is required'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def load_comments(request, forum_id):
+    forum = get_object_or_404(Forum, id=forum_id)
+    comments = ForumComment.objects.filter(forum=forum).select_related('user__profile').order_by('-created_at')
+
+    # โหลด partial template และส่งคอมเมนต์กลับมา
+    return render(request, 'core/partials/forum_comments.html', {'comments': comments})
+
+
+def delete_comment(request, comment_id):
+    if request.method == "DELETE" and request.user.is_authenticated:
+        comment = get_object_or_404(ForumComment, id=comment_id, user=request.user)
+        comment.delete()
+        return HttpResponse(status=204)  # Success without content
+    return HttpResponse(status=403)  # Forbidden

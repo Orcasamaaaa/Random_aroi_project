@@ -43,7 +43,15 @@ urlpatterns = [
     path('forum/<int:forum_id>/', views.forum_detail, name='forum_detail'),
     #path('forum/<int:forum_id>/edit/', views.edit_forum, name='edit_forum'),
    # path('forum/<int:forum_id>/delete/', views.delete_forum, name='delete_forum'),
+    path('forum/my/', views.my_forums, name='my_forums'),
+    path('forum/<int:forum_id>/edit/', views.forum_edit, name='forum_edit'),
+    path('forum/<int:pk>/delete/', views.forum_delete, name='forum_delete'),
+    path('forum/<int:forum_id>/comment/', views.add_comment, name='add_comment'),  # ส่งความคิดเห็น
+    path('forum/<int:forum_id>/comments/', views.load_comments, name='load_comments'),  # โหลดความคิดเห็นแบบ HTMX
+    path('comments/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
+
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

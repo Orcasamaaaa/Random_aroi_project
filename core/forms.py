@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import *
+from django_select2.forms import ModelSelect2MultipleWidget
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -49,7 +50,17 @@ class ProfileForm(forms.ModelForm):
 class RestaurantForm(forms.ModelForm):
     class Meta:
         model = Restaurant
-        fields = ['name', 'description', 'location', 'contact_info', 'opening_hours', 'social_media', 'images']
+        fields = [
+            'name', 'description', 'location', 'contact_info',
+            'opening_hours', 'social_media', 'images', 'categories'
+        ]
+        widgets = {
+            'categories': ModelSelect2MultipleWidget(
+                queryset=RestaurantCategory.objects.all(),
+                search_fields=['name__icontains'],  # ทำให้สามารถค้นหาได้
+                attrs={'data-placeholder': 'เลือกประเภท...'},
+            ),
+        }
 
 class RestaurantImageForm(forms.ModelForm):
     class Meta:

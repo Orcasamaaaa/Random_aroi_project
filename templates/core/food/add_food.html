@@ -1,48 +1,89 @@
 {% extends 'core/base.html' %}
 
 {% block main %}
-<div class="container mx-auto py-10">
-    <div class="bg-white shadow-md rounded-lg p-8 max-w-3xl mx-auto">
-        <h1 class="text-3xl font-extrabold text-orange-500 mb-8 text-center">เพิ่มเมนูอาหาร</h1>
-
-        <form method="post" enctype="multipart/form-data" class="space-y-8">
-            {% csrf_token %}
-            
-            <!-- ฟิลด์เมนู -->
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-gray-700 font-semibold">ชื่อเมนู</label>
-                    {{ form.name }}
-                </div>
-                <div>
-                    <label class="block text-gray-700 font-semibold">รายละเอียดเมนู</label>
-                    {{ form.description }}
-                </div>
-                <div>
-                    <label class="block text-gray-700 font-semibold">ราคา</label>
-                    {{ form.price }}
-                </div>
-                <div>
-                    <label class="block text-gray-700 font-semibold">หมวดหมู่</label>
-                    {{ form.category }}
-                </div>
-                <div>
-                    <label class="block text-gray-700 font-semibold">หมวดหมู่ย่อย</label>
-                    {{ form.subcategory }}
-                </div>
-                <div>
-                    <label class="block text-gray-700 font-semibold">รูปภาพเมนู</label>
-                    {{ form.image }}
-                </div>
-            </div>
-
-            <!-- ปุ่มบันทึก -->
-            <div class="text-center">
-                <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition transform hover:scale-105">
-                    เพิ่มเมนู
-                </button>
-            </div>
-        </form>
+<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <h2 class="text-3xl font-semibold text-center text-orange-500 mb-6">เพิ่มเมนูอาหาร</h2>
     </div>
+
+    <!-- ฟอร์มเพิ่มเมนูอาหาร -->
+    <form method="post" class="space-y-6 bg-white p-6 rounded-lg shadow-lg" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- ชื่อเมนู -->
+      <div>
+        <label for="name" class="block text-gray-700 font-semibold mb-2">ชื่อเมนู</label>
+        <input type="text" id="name" name="name" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="ชื่อเมนู" value="{{ form.name.value|default_if_none:'' }}">
+        {% if form.name.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.name.errors }}</p>
+        {% endif %}
+      </div>
+
+      <!-- รายละเอียดเมนู -->
+      <div>
+        <label for="description" class="block text-gray-700 font-semibold mb-2">รายละเอียดเมนู</label>
+        <textarea id="description" name="description" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" rows="4" placeholder="รายละเอียดเมนู">{{ form.description.value|default_if_none:'' }}</textarea>
+        {% if form.description.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.description.errors }}</p>
+        {% endif %}
+      </div>
+
+      <!-- ราคา -->
+      <div>
+        <label for="price" class="block text-gray-700 font-semibold mb-2">ราคา</label>
+        <input type="number" id="price" name="price" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="ราคา" value="{{ form.price.value|default_if_none:'' }}">
+        {% if form.price.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.price.errors }}</p>
+        {% endif %}
+      </div>
+
+      <!-- หมวดหมู่ -->
+      <div>
+        <label for="category" class="block text-gray-700 font-semibold mb-2">หมวดหมู่</label>
+        <select id="category" name="category" multiple class="js-select2 form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500">
+          {% for category in form.category.field.queryset %}
+          <option value="{{ category.id }}" {% if category.id in form.category.value %}selected{% endif %}>{{ category.name }}</option>
+          {% endfor %}
+        </select>
+        {% if form.category.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.category.errors }}</p>
+        {% endif %}
+      </div>
+
+      <!-- รูปภาพเมนู -->
+      <div>
+        <label for="image" class="block text-gray-700 font-semibold mb-2">รูปภาพเมนู</label>
+        <input type="file" id="image" name="image" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" accept="image/*">
+        {% if form.image.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.image.errors }}</p>
+        {% endif %}
+      </div>
+
+      <!-- ปุ่มเพิ่มเมนู -->
+      <div>
+        <button type="submit" class="w-full py-3 px-6 bg-orange-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-orange-600 transition duration-300 ease-in-out transform hover:scale-105">
+          เพิ่มเมนู
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    $('.js-select2').select2({
+      placeholder: "เลือกหมวดหมู่",
+      allowClear: true,
+      width: '100%'
+    }).on('select2:open', function () {
+      document.querySelector('.select2-search__field').focus();
+    });
+  });
+</script>
 {% endblock %}

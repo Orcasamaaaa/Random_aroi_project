@@ -4,9 +4,14 @@
 <div class="container mx-auto py-10 px-4">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-4xl font-bold text-orange-600">กระทู้ทั้งหมด</h1>
-        <a href="{% url 'forum_create' %}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow-md transition-transform transform hover:scale-105">
-            + สร้างกระทู้ใหม่
-        </a>
+        <div class="flex space-x-4">
+            <a href="{% url 'forum_create' %}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                + สร้างกระทู้ใหม่
+            </a>
+            <a href="{% url 'my_forums' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                กระทู้ของฉัน
+            </a>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

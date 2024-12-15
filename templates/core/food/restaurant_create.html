@@ -13,81 +13,80 @@
       {% csrf_token %}
 
       <!-- ชื่อร้านอาหาร -->
-      <div class="flex items-center border-b border-gray-300 py-2">
-        <span class="text-gray-500 pr-2">
-          <i class="fas fa-store"></i>
-        </span>
-        <input type="text" id="name" name="name" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="ชื่อร้านอาหาร" value="{{ form.name.value|default_if_none:'' }}">
+      <div class="mb-4">
+        <label for="name" class="block text-gray-700">ชื่อร้านอาหาร</label>
+        <input type="text" id="name" name="name" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="ชื่อร้านอาหาร" value="{{ form.name.value|default_if_none:'' }}">
+        {% if form.name.errors %}
+        <p class="text-red-500 text-sm">{{ form.name.errors }}</p>
+        {% endif %}
       </div>
-      {% if form.name.errors %}
-        <p class="text-red-500 text-sm">ชื่อร้านอาหารไม่ถูกต้อง: {{ form.name.errors }}</p>
-      {% endif %}
 
       <!-- รายละเอียดร้านอาหาร -->
-      <div class="flex items-center border-b border-gray-300 py-2">
-        <span class="text-gray-500 pr-2">
-          <i class="fas fa-info-circle"></i>
-        </span>
-        <textarea id="description" name="description" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="รายละเอียดร้านอาหาร">{{ form.description.value|default_if_none:'' }}</textarea>
+      <div class="mb-4">
+        <label for="description" class="block text-gray-700">รายละเอียดร้านอาหาร</label>
+        <textarea id="description" name="description" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="รายละเอียดร้านอาหาร">{{ form.description.value|default_if_none:'' }}</textarea>
+        {% if form.description.errors %}
+        <p class="text-red-500 text-sm">{{ form.description.errors }}</p>
+        {% endif %}
       </div>
-      {% if form.description.errors %}
-        <p class="text-red-500 text-sm">รายละเอียดร้านอาหารไม่ถูกต้อง: {{ form.description.errors }}</p>
-      {% endif %}
 
       <!-- ที่ตั้งร้านอาหาร -->
-      <div class="flex items-center border-b border-gray-300 py-2">
-        <span class="text-gray-500 pr-2">
-          <i class="fas fa-map-marker-alt"></i>
-        </span>
-        <input type="text" id="location" name="location" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="ที่ตั้งร้านอาหาร" value="{{ form.location.value|default_if_none:'' }}">
+      <div class="mb-4">
+        <label for="location" class="block text-gray-700">ที่ตั้งร้านอาหาร</label>
+        <input type="text" id="location" name="location" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="ที่ตั้งร้านอาหาร" value="{{ form.location.value|default_if_none:'' }}">
+        {% if form.location.errors %}
+        <p class="text-red-500 text-sm">{{ form.location.errors }}</p>
+        {% endif %}
       </div>
-      {% if form.location.errors %}
-        <p class="text-red-500 text-sm">ที่ตั้งร้านอาหารไม่ถูกต้อง: {{ form.location.errors }}</p>
-      {% endif %}
 
       <!-- เบอร์ติดต่อ -->
-      <div class="flex items-center border-b border-gray-300 py-2">
-        <span class="text-gray-500 pr-2">
-          <i class="fas fa-phone"></i>
-        </span>
-        <input type="text" id="contact_info" name="contact_info" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="เบอร์ติดต่อ" value="{{ form.contact_info.value|default_if_none:'' }}">
+      <div class="mb-4">
+        <label for="contact_info" class="block text-gray-700">เบอร์ติดต่อ</label>
+        <input type="text" id="contact_info" name="contact_info" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="เบอร์ติดต่อ" value="{{ form.contact_info.value|default_if_none:'' }}">
+        {% if form.contact_info.errors %}
+        <p class="text-red-500 text-sm">{{ form.contact_info.errors }}</p>
+        {% endif %}
       </div>
-      {% if form.contact_info.errors %}
-        <p class="text-red-500 text-sm">เบอร์ติดต่อไม่ถูกต้อง: {{ form.contact_info.errors }}</p>
-      {% endif %}
 
       <!-- เวลาเปิดปิดร้าน -->
-      <div class="flex items-center border-b border-gray-300 py-2">
-        <span class="text-gray-500 pr-2">
-          <i class="fas fa-clock"></i>
-        </span>
-        <input type="text" id="opening_hours" name="opening_hours" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="เวลาเปิดปิดร้าน" value="{{ form.opening_hours.value|default_if_none:'' }}">
+      <div class="mb-4">
+        <label for="opening_hours" class="block text-gray-700">เวลาเปิดปิดร้าน</label>
+        <input type="text" id="opening_hours" name="opening_hours" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="เวลาเปิดปิดร้าน" value="{{ form.opening_hours.value|default_if_none:'' }}">
+        {% if form.opening_hours.errors %}
+        <p class="text-red-500 text-sm">{{ form.opening_hours.errors }}</p>
+        {% endif %}
       </div>
-      {% if form.opening_hours.errors %}
-        <p class="text-red-500 text-sm">เวลาเปิดปิดร้านไม่ถูกต้อง: {{ form.opening_hours.errors }}</p>
-      {% endif %}
 
       <!-- ลิงก์ Social Media -->
-      <div class="flex items-center border-b border-gray-300 py-2">
-        <span class="text-gray-500 pr-2">
-          <i class="fas fa-link"></i>
-        </span>
-        <input type="text" id="social_media" name="social_media" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" placeholder="ลิงก์ Social Media (ถ้ามี)" value="{{ form.social_media.value|default_if_none:'' }}">
+      <div class="mb-4">
+        <label for="social_media" class="block text-gray-700">ลิงก์ Social Media</label>
+        <input type="text" id="social_media" name="social_media" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="ลิงก์ Social Media (ถ้ามี)" value="{{ form.social_media.value|default_if_none:'' }}">
+        {% if form.social_media.errors %}
+        <p class="text-red-500 text-sm">{{ form.social_media.errors }}</p>
+        {% endif %}
       </div>
-      {% if form.social_media.errors %}
-        <p class="text-red-500 text-sm">ลิงก์ Social Media ไม่ถูกต้อง: {{ form.social_media.errors }}</p>
-      {% endif %}
+
+      <!-- ประเภทของร้านอาหาร -->
+      <div class="mb-4">
+        <label for="categories" class="block text-gray-700">ประเภทของร้านอาหาร</label>
+        <select id="categories" name="categories" multiple class="js-select2 form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500">
+          {% for category in form.categories.field.queryset %}
+          <option value="{{ category.id }}" {% if category.id in form.categories.value %}selected{% endif %}>{{ category.name }}</option>
+          {% endfor %}
+        </select>
+        {% if form.categories.errors %}
+        <p class="text-red-500 text-sm">{{ form.categories.errors }}</p>
+        {% endif %}
+      </div>
 
       <!-- รูปภาพร้านอาหาร -->
-      <div class="flex items-center border-b border-gray-300 py-2">
-        <span class="text-gray-500 pr-2">
-          <i class="fas fa-image"></i>
-        </span>
-        <input type="file" id="images" name="images" class="appearance-none bg-transparent w-full text-gray-700 py-1 px-2 leading-tight focus:outline-none" accept="image/*">
+      <div class="mb-4">
+        <label for="images" class="block text-gray-700">รูปภาพร้านอาหาร</label>
+        <input type="file" id="images" name="images" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" accept="image/*">
+        {% if form.images.errors %}
+        <p class="text-red-500 text-sm">{{ form.images.errors }}</p>
+        {% endif %}
       </div>
-      {% if form.images.errors %}
-        <p class="text-red-500 text-sm">รูปภาพไม่ถูกต้อง: {{ form.images.errors }}</p>
-      {% endif %}
 
       <!-- Submit Button -->
       <div>

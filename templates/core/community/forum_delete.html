@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="container mx-auto py-10 px-4">
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg mx-auto">
+        <h1 class="text-3xl font-bold text-red-600 mb-6 text-center">ยืนยันการลบกระทู้</h1>
+        <p class="text-gray-700 text-center mb-6">
+            คุณแน่ใจหรือไม่ว่าต้องการลบกระทู้ <span class="font-semibold">"{{ forum.title }}"</span>?
+        </p>
+        <div class="flex justify-center space-x-4">
+            <!-- ปุ่มยืนยันลบ -->
+            <form method="post" action="{% url 'forum_delete' forum.id %}">
+                {% csrf_token %}
+                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md">
+                    ลบกระทู้
+                </button>
+            </form>
+            <!-- ปุ่มยกเลิก -->
+            <a href="{% url 'forum_detail' forum.id %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg shadow-md">
+                ยกเลิก
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

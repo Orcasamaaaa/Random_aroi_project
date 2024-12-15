@@ -13,6 +13,12 @@ class Profile(models.Model):
 
 
 # โมเดลร้านอาหาร
+class RestaurantCategory(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
 class Restaurant(models.Model):
     owner = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -21,10 +27,12 @@ class Restaurant(models.Model):
     contact_info = models.CharField(max_length=255)
     opening_hours = models.TextField()
     social_media = models.TextField(null=True, blank=True)
-    images = models.ImageField(upload_to='restaurant_images/', null=True, blank=True)  # รูปโปรไฟล์ร้าน
+    images = models.ImageField(upload_to='restaurant_images/', null=True, blank=True)
+    categories = models.ManyToManyField(RestaurantCategory, related_name='restaurants')  # เปลี่ยนชื่อ field
 
     def __str__(self):
         return self.name
+
 
 class RestaurantImage(models.Model):
     restaurant = models.ForeignKey(Restaurant, related_name='additional_images', on_delete=models.CASCADE)
@@ -81,14 +89,14 @@ class Forum(models.Model):
         return self.title
 
 # โมเดลความคิดเห็นในกระทู้
-class Forum_comment(models.Model):
-    Forum = models.ForeignKey(Forum, on_delete=models.CASCADE)
+class ForumComment(models.Model):
+    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Comment by {self.user} on {self.thread}'
+        return f"Comment by {self.user} on {self.forum}"
 
 
 
