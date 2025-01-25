@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block main %}
 <div class="container mx-auto py-12 px-6">
@@ -7,14 +8,24 @@
     <!-- ฟอร์มสำหรับการกรอง -->
     <form method="get" class="bg-white shadow-md rounded-lg p-8 mb-10 max-w-3xl mx-auto border border-gray-200">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- หมวดหมู่ -->
             <div class="flex flex-col">
-                {{ form.category.label_tag }}
-                {{ form.category }}
+                <label for="category-select" class="block text-gray-700">ประเภทอาหาร</label>
+                <select id="category-select" name="category" multiple class="select2 border-gray-300 rounded-lg shadow-sm">
+                    {% for cat in form.category.field.queryset %}
+                        <option value="{{ cat.id }}"
+                            {% if cat.id|stringformat:"s" in form.category.value|default:'' %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                    {% endfor %}
+                </select>
             </div>
+            <!-- ราคาขั้นต่ำ -->
             <div class="flex flex-col">
                 {{ form.min_price.label_tag }}
                 {{ form.min_price }}
             </div>
+            <!-- ราคาสูงสุด -->
             <div class="flex flex-col">
                 {{ form.max_price.label_tag }}
                 {{ form.max_price }}
@@ -32,9 +43,9 @@
     <div class="bg-white shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto border border-gray-200">
         <div class="h-56 w-full bg-gray-100 flex items-center justify-center">
             {% if food.image %}
-            <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-full object-cover">
+                <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-full object-cover">
             {% else %}
-            <span class="text-gray-500">ไม่มีรูปภาพ</span>
+                <span class="text-gray-500">ไม่มีรูปภาพ</span>
             {% endif %}
         </div>
         <div class="p-8 text-center">
@@ -42,10 +53,21 @@
             <p class="text-gray-700 text-md mb-4">{{ food.description }}</p>
             <p class="text-lg font-semibold text-gray-800">ราคา: {{ food.price }} บาท</p>
 
+            <!-- แสดงประเภทอาหาร -->
+            {% if food.category.all %}
+            <p class="text-gray-700 text-md mt-2">
+                <strong>ประเภทอาหาร:</strong>
+                {% for cat in food.category.all %}
+                    {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+            {% endif %}
+
             <!-- ปุ่มชอบและไม่ชอบ -->
             {% if user.is_authenticated %}
             <form method="post" class="flex justify-center gap-4 mt-4">
                 {% csrf_token %}
+                <input type="hidden" name="food_id" value="{{ food.id }}">
                 <button type="submit" name="action" value="like" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
                     ชอบ
                 </button>
@@ -79,6 +101,11 @@
     </div>
 </div>
 
+<!-- Select2 Scripts -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
 <script>
     function openModal() {
         document.getElementById('loginModal').classList.remove('hidden');
@@ -87,5 +114,13 @@
     function closeModal() {
         document.getElementById('loginModal').classList.add('hidden');
     }
+
+    // ทำให้ Select2 ทำงาน
+    $(document).ready(function() {
+        $('#category-select').select2({
+            placeholder: "เลือกหมวดหมู่อาหาร",
+            allowClear: true
+        });
+    });
 </script>
 {% endblock %}

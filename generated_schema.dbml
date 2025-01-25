@@ -1,0 +1,132 @@
+Table logentry {
+  id integer
+  action_time timestamp
+  user_id integer [note: 'foreign key to user']
+  content_type_id integer [note: 'foreign key to contenttype']
+  object_id text
+  object_repr varchar
+  action_flag integer
+  change_message text
+}
+
+Table permission {
+  id integer
+  name varchar
+  content_type_id integer [note: 'foreign key to contenttype']
+  codename varchar
+}
+
+Table group {
+  id integer
+  name varchar
+}
+
+Table user {
+  id integer
+  password varchar
+  last_login timestamp
+  username varchar
+  first_name varchar
+  last_name varchar
+  email varchar
+  date_joined timestamp
+}
+
+Table contenttype {
+  id integer
+  app_label varchar
+  model varchar
+}
+
+Table session {
+  session_key varchar
+  session_data text
+  expire_date timestamp
+}
+
+Table profile {
+  id integer
+  user_id integer [note: 'foreign key to user']
+  first_name varchar
+  last_name varchar
+}
+
+Table restaurantcategory {
+  id integer
+  name varchar
+}
+
+Table restaurant {
+  id integer
+  owner_id integer [note: 'foreign key to user']
+  name varchar
+  description text
+  location varchar
+  contact_info varchar
+  opening_hours text
+  social_media text
+}
+
+Table restaurantimage {
+  id integer
+  restaurant_id integer [note: 'foreign key to restaurant']
+}
+
+Table category {
+  id integer
+  name varchar
+}
+
+Table food {
+  id integer
+  restaurant_id integer [note: 'foreign key to restaurant']
+  name varchar
+  description text
+}
+
+Table review {
+  id integer
+  restaurant_id integer [note: 'foreign key to restaurant']
+  user_id integer [note: 'foreign key to user']
+  rating integer
+  comment text
+  created_at timestamp
+}
+
+Table forum {
+  id integer
+  user_id integer [note: 'foreign key to user']
+  title varchar
+  content text
+  created_at timestamp
+}
+
+Table forumcomment {
+  id integer
+  forum_id integer [note: 'foreign key to forum']
+  user_id integer [note: 'foreign key to user']
+  content text
+  created_at timestamp
+}
+
+Table likedislikefood {
+  id integer
+  user_id integer [note: 'foreign key to user']
+  food_id integer [note: 'foreign key to food']
+  timestamp timestamp
+}
+
+Ref: logentry.user_id > user.id // many-to-one
+Ref: logentry.content_type_id > contenttype.id // many-to-one
+Ref: permission.content_type_id > contenttype.id // many-to-one
+Ref: profile.user_id > user.id // many-to-one
+Ref: restaurant.owner_id > user.id // many-to-one
+Ref: restaurantimage.restaurant_id > restaurant.id // many-to-one
+Ref: food.restaurant_id > restaurant.id // many-to-one
+Ref: review.restaurant_id > restaurant.id // many-to-one
+Ref: review.user_id > user.id // many-to-one
+Ref: forum.user_id > user.id // many-to-one
+Ref: forumcomment.forum_id > forum.id // many-to-one
+Ref: forumcomment.user_id > user.id // many-to-one
+Ref: likedislikefood.user_id > user.id // many-to-one
+Ref: likedislikefood.food_id > food.id // many-to-one

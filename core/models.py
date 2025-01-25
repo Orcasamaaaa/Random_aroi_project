@@ -55,7 +55,7 @@ class Category(models.Model):
 class Food(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='foods')  # เชื่อมกับร้านอาหาร
     name = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     category = models.ManyToManyField(Category, related_name='foods')  # เปลี่ยนเป็น ManyToManyField
     image = models.ImageField(upload_to='food_images/', null=True, blank=True)  # รูปภาพอาหาร

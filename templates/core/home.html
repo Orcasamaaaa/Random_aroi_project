@@ -9,7 +9,9 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-4">ร้านอาหาร</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for restaurant in restaurants %}
-            <a href="{% url 'restaurant_detail' restaurant.id %}" class="block bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <a href="{% url 'restaurant_detail' restaurant.id %}"
+               class="block bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 transform hover:scale-105">
+                <!-- รูปภาพ -->
                 {% if restaurant.images %}
                 <img src="{{ restaurant.images.url }}" alt="{{ restaurant.name }}" class="w-full h-48 object-cover">
                 {% else %}
@@ -17,13 +19,31 @@
                     ไม่มีรูปภาพ
                 </div>
                 {% endif %}
+
+                <!-- ข้อมูลร้านอาหาร -->
                 <div class="p-6">
+                    <!-- ชื่อร้าน -->
                     <h3 class="text-xl font-bold text-gray-800 mb-2">{{ restaurant.name }}</h3>
-                    <p class="text-gray-700">{{ restaurant.description|default:"ไม่มีคำอธิบาย" }}</p>
+                    <!-- คำอธิบายร้าน -->
+                    <p class="text-gray-700 mb-2">{{ restaurant.description|default:"ไม่มีคำอธิบาย" }}</p>
+                    <!-- หมวดหมู่ร้านอาหาร -->
+                    <p class="text-gray-700 mb-2">
+                        <strong>หมวดหมู่:</strong>
+                        {% if restaurant.categories.all %}
+                            {% for category in restaurant.categories.all %}
+                                <span class="inline-block bg-gray-200 rounded px-2 py-1 text-sm text-gray-700 mr-2">
+                                    {{ category.name }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-gray-500">ไม่มีหมวดหมู่</span>
+                        {% endif %}
+                    </p>
                 </div>
             </a>
             {% endfor %}
         </div>
+
         {% if not restaurants %}
         <p class="text-gray-500 mt-4">ยังไม่มีร้านอาหาร</p>
         {% endif %}
@@ -34,7 +54,9 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-4">อาหาร</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for food in foods %}
-            <a href="{% url 'choose_food' food.id %}" class="block bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <a href="{% url 'restaurant_detail' food.restaurant.id %}"
+               class="block bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 transform hover:scale-105">
+                <!-- รูปภาพ -->
                 {% if food.image %}
                 <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-48 object-cover">
                 {% else %}
@@ -42,9 +64,24 @@
                     ไม่มีรูปภาพ
                 </div>
                 {% endif %}
+
+                <!-- ข้อมูลอาหาร -->
                 <div class="p-6">
+                    <!-- ชื่ออาหาร -->
                     <h3 class="text-xl font-bold text-gray-800 mb-2">{{ food.name }}</h3>
-                    <p class="text-gray-700">{{ food.description|default:"ไม่มีคำอธิบาย" }}</p>
+                    <!-- ราคา -->
+                    <p class="text-gray-700 mb-2"><strong>ราคา:</strong> {{ food.price }} บาท</p>
+                    <!-- ประเภทอาหาร -->
+                    <p class="text-gray-700 mb-2">
+                        <strong>ประเภท:</strong>
+                        {% for category in food.category.all %}
+                            <span class="inline-block bg-gray-200 rounded px-2 py-1 text-sm text-gray-700 mr-2">
+                                {{ category.name }}
+                            </span>
+                        {% endfor %}
+                    </p>
+                    <!-- คำอธิบาย (สั้น) -->
+                    <p class="text-gray-600">{{ food.description|truncatewords:15|default:"ไม่มีคำอธิบาย" }}</p>
                 </div>
             </a>
             {% endfor %}
@@ -59,7 +96,7 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-4">กระทู้</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for forum in forums %}
-            <a href="{% url 'forum_detail' forum.id %}" class="block bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <a href="{% url 'forum_detail' forum.id %}" class="block bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 transform hover:scale-105">
                 {% if forum.image %}
                 <img src="{{ forum.image.url }}" alt="{{ forum.title }}" class="w-full h-48 object-cover">
                 {% else %}

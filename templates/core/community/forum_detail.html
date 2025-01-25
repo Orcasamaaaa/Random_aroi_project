@@ -17,7 +17,7 @@
             {% if request.user == forum.user %}
             <div class="flex space-x-4 mt-6">
                 <a href="{% url 'forum_edit' forum.id %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">แก้ไข</a>
-                <button onclick="openModal()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">ลบ</button>
+                <button type="button" onclick="openModal('deleteForumModal', '{% url 'forum_delete' forum.id %}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">ลบ</button>
             </div>
             {% endif %}
         </div>
@@ -27,82 +27,101 @@
     <div class="bg-white shadow-lg rounded-lg overflow-hidden max-w-2xl mx-auto">
         <h2 class="text-2xl font-bold text-gray-800 p-6 border-b">แสดงความคิดเห็น</h2>
 
-        <!-- โหลดความคิดเห็นครั้งเดียว -->
-        <div id="comments-section"
-     hx-get="{% url 'load_comments' forum.id %}"
-     hx-trigger="load"
-     hx-swap="innerHTML">
-    <p class="text-center text-gray-500">กำลังโหลดความคิดเห็น...</p>
-        </div>
-
         <!-- ฟอร์มแสดงความคิดเห็น -->
-<form method="post"
-      hx-post="{% url 'add_comment' forum.id %}"
-      hx-target="#comments-section"
-      hx-swap="innerHTML"
-      hx-trigger="submit"
+        <form method="post" action="{% url 'forum_detail' forum.id %}" class="p-6">
+            {% csrf_token %}
+            <label for="content" class="block text-gray-700 font-semibold mb-2">แสดงความคิดเห็น</label>
+            <textarea name="content" id="content" rows="3" class="w-full p-3 border rounded mb-4 focus:ring focus:ring-orange-200" placeholder="เขียนความคิดเห็น..."></textarea>
+            <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-300">ส่งความคิดเห็น</button>
+        </form>
 
-      class="p-6 border-t">
-    {% csrf_token %}
-    <label for="content" class="block text-gray-700 font-semibold mb-2">แสดงความคิดเห็น</label>
-    <textarea name="content" id="content" rows="3"
-              class="w-full p-3 border rounded mb-4 focus:ring focus:ring-orange-200"
-              placeholder="เขียนความคิดเห็น..."></textarea>
-    <button type="submit"
-            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-300">
-        ส่งความคิดเห็น
-    </button>
-</form>
+        <!-- แสดงความคิดเห็น -->
+        <div class="p-6">
+            {% for comment in comments %}
+            <div id="comment-{{ comment.id }}" class="p-4 border-b flex items-start space-x-4">
+                <!-- รูปโปรไฟล์ -->
+                <div class="flex-shrink-0">
+                    {% if comment.user.profile.profile_picture %}
+                    <img src="{{ comment.user.profile.profile_picture.url }}"
+                         alt="Profile Picture"
+                         class="w-12 h-12 rounded-full object-cover"
+                         onerror="this.src='https://via.placeholder.com/48';">
+                    {% else %}
+                    <img src="https://via.placeholder.com/48"
+                         alt="Default Profile Picture"
+                         class="w-12 h-12 rounded-full object-cover">
+                    {% endif %}
+                </div>
 
+                <!-- เนื้อหาคอมเมนต์ -->
+                <div class="flex-1">
+                    <p class="text-gray-800 font-semibold">{{ comment.user.username }}</p>
+                    <p class="text-gray-700">{{ comment.content }}</p>
+                    <p class="text-sm text-gray-500">{{ comment.created_at|date:"d M Y H:i" }}</p>
+                </div>
 
+                <!-- ปุ่มลบความคิดเห็น -->
+                {% if request.user == comment.user %}
 
-
-
+                <div class="flex space-x-2">
+                    <a href="{% url 'edit_comment' comment.id %}" class="text-blue-500 hover:text-blue-600 text-sm font-semibold">แก้ไข</a>
+                    <button type="button" onclick="openModal('deleteCommentModal', '{% url 'delete_comment' comment.id %}')" class="text-red-500 hover:text-red-600 text-sm font-semibold">ลบ</button>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-gray-500 text-center">ยังไม่มีความคิดเห็น</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
-<!-- Modal ยืนยันการลบ -->
-<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+<!-- Modal สำหรับยืนยันการลบ -->
+<div id="deleteForumModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
         <h2 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบกระทู้</h2>
         <p class="text-gray-600 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบกระทู้นี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
         <div class="flex justify-end space-x-4">
-            <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">ยกเลิก</button>
-            <form method="POST" action="{% url 'forum_delete' forum.id %}">
+            <button onclick="closeModal('deleteForumModal')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">ยกเลิก</button>
+            <form method="POST" id="deleteForumForm">
                 {% csrf_token %}
                 <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">ยืนยัน</button>
             </form>
         </div>
     </div>
 </div>
+
+<div id="deleteCommentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบความคิดเห็น</h2>
+        <p class="text-gray-600 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบความคิดเห็นนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+        <div class="flex justify-end space-x-4">
+            <button onclick="closeModal('deleteCommentModal')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">ยกเลิก</button>
+            <form method="POST" id="deleteCommentForm">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">ยืนยัน</button>
+            </form>
+        </div>
+    </div>
+<div>
+
+</div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // ฟังก์ชันเปิด Modal
-    function openModal() {
-        document.getElementById('deleteModal').classList.remove('hidden');
+    function openModal(modalId, formAction) {
+        const modal = document.getElementById(modalId);
+        const form = modal.querySelector('form');
+        form.action = formAction; // ตั้ง action ของฟอร์มให้ถูกต้อง
+        modal.classList.remove('hidden');
     }
 
-    // ฟังก์ชันปิด Modal
-    function closeModal() {
-        document.getElementById('deleteModal').classList.add('hidden');
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.classList.add('hidden');
     }
-
-    // ฟังก์ชันล้างฟอร์มหลังจากส่งความคิดเห็น
-   function clearForm() {
-        document.getElementById('content').value = '';
-    }
-
-    document.body.addEventListener('htmx:afterRequest', function(event) {
-        console.log("HTMX Request Completed:", event);
-    });
-
-    document.body.addEventListener('htmx:responseError', function(event) {
-        console.error("HTMX Error:", event);
-    });
-    document.body.addEventListener('htmx:configRequest', (event) => {
-        event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
-    });
 </script>
 {% endblock %}

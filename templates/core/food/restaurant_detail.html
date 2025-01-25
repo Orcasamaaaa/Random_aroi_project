@@ -1,17 +1,18 @@
 {% extends 'core/base.html' %}
+{% load custom_tags %}
 
 {% block main %}
 <div class="container mx-auto py-10 px-4">
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <!-- ข้อมูลร้านและรูปโปรไฟลร้าน -->
-        <div class="p-6 flex flex-col md:flex-row items-center">
+        <!-- ข้อมูลร้านและรูปโปรไฟล์ร้าน -->
+        <div class="p-6 flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-6">
             <div class="w-32 h-32 md:w-48 md:h-48 flex-shrink-0">
                 {% if restaurant.images %}
-                <img src="{{ restaurant.images.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover rounded-full shadow-lg">
+                    <img src="{{ restaurant.images.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover rounded-full shadow-lg transform transition duration-500 hover:scale-105">
                 {% else %}
-                <div class="bg-gray-300 w-full h-full rounded-full flex items-center justify-center text-gray-500">
-                    ไม่มีรูปภาพ
-                </div>
+                    <div class="bg-gray-300 w-full h-full rounded-full flex items-center justify-center text-gray-500">
+                        ไม่มีรูปภาพ
+                    </div>
                 {% endif %}
             </div>
             <div class="md:ml-6 mt-4 md:mt-0">
@@ -22,14 +23,27 @@
                         <p class="text-gray-700 mb-2"><strong>ที่ตั้ง:</strong> {{ restaurant.location }}</p>
                         <p class="text-gray-700 mb-2"><strong>เบอร์ติดต่อ:</strong> {{ restaurant.contact_info }}</p>
                         <p class="text-gray-700 mb-2"><strong>เวลาเปิดปิด:</strong> {{ restaurant.opening_hours }}</p>
+                        <p class="text-gray-700 mb-2">
+                            <strong>ประเภทของร้านอาหาร:</strong>
+                            {% if categories %}
+                                <span class="flex flex-wrap gap-2 mt-2">
+                                    {% for category in categories %}
+                                        <span class="bg-orange-500 text-white px-3 py-1 rounded-full">{{ category.name }}</span>
+                                    {% endfor %}
+                                </span>
+                            {% else %}
+                                <span class="text-gray-500">ไม่มีประเภทที่ระบุ</span>
+                            {% endif %}
+                        </p>
                     </div>
                     <div>
                         {% if restaurant.social_media %}
-                        <p class="text-gray-700 mb-2"><strong>Social Media:</strong>
-                            <a href="{{ restaurant.social_media }}" target="_blank" class="text-orange-500 hover:underline">
-                                {{ restaurant.social_media }}
-                            </a>
-                        </p>
+                            <p class="text-gray-700 mb-2">
+                                <strong>Social Media:</strong>
+                                <a href="{{ restaurant.social_media }}" target="_blank" class="text-orange-500 hover:underline">
+                                    {{ restaurant.social_media }}
+                                </a>
+                            </p>
                         {% endif %}
                     </div>
                 </div>
@@ -38,102 +52,196 @@
 
         <!-- ปุ่มแก้ไขข้อมูลร้าน -->
         {% if request.user == restaurant.owner %}
-        <div class="p-6 text-right">
-            <a href="{% url 'restaurant_edit' restaurant.id %}" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600">
-                แก้ไขข้อมูลร้านอาหาร
-            </a>
-        </div>
+            <div class="p-6 text-right">
+                <a href="{% url 'restaurant_edit' restaurant.id %}" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transform transition duration-300 hover:scale-105">
+                    แก้ไขข้อมูลร้านอาหาร
+                </a>
+            </div>
         {% endif %}
 
         <!-- ส่วนแสดงบรรยากาศร้าน -->
         {% if restaurant.additional_images.exists %}
-        <div class="p-6">
-            <h2 class="text-2xl font-bold text-gray-700 mb-4">รูปบรรยากาศร้าน</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {% for image in restaurant.additional_images.all %}
-                <div class="relative border rounded-lg overflow-hidden bg-gray-100">
-                    <div class="w-full h-32 bg-gray-200 rounded-lg overflow-hidden">
-                        {% if image.image %}
-                        <img src="{{ image.image.url }}" alt="บรรยากาศร้าน" class="w-full h-full object-cover">
-                        {% else %}
-                        <div class="flex items-center justify-center h-full text-gray-500">
-                            ไม่มีรูปภาพ
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">รูปบรรยากาศร้าน</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {% for image in restaurant.additional_images.all %}
+                        <div class="relative border rounded-lg overflow-hidden bg-gray-100 transform transition duration-500 hover:scale-105">
+                            <div class="w-full h-32 bg-gray-200 rounded-lg overflow-hidden">
+                                {% if image.image %}
+                                    <img src="{{ image.image.url }}" alt="บรรยากาศร้าน" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="flex items-center justify-center h-full text-gray-500">ไม่มีรูปภาพ</div>
+                                {% endif %}
+                            </div>
+                            {% if request.user == restaurant.owner %}
+                                <button class="absolute top-2 right-2 bg-red-500 text-white py-1 px-2 rounded-lg hover:bg-red-600"
+                                        onclick="confirmDelete('delete_image', '{{ restaurant.id }}', '{{ image.id }}')">
+                                    ลบ
+                                </button>
+                            {% endif %}
                         </div>
-                        {% endif %}
-                    </div>
-                    <!-- ปุ่มลบรูปบรรยากาศร้าน -->
-                    {% if request.user == restaurant.owner %}
-                    <button class="absolute top-2 right-2 bg-red-500 text-white py-1 px-2 rounded-lg hover:bg-red-600" onclick="confirmDelete('delete_image', '{{ restaurant.id }}', '{{ image.id }}')">
-                        ลบ
-                    </button>
-                    {% endif %}
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
-        </div>
+        {% endif %}
+
+        <!-- ปุ่มเพิ่มรูปบรรยากาศร้าน -->
+        {% if request.user == restaurant.owner %}
+            <div class="p-6 text-right">
+                <a href="{% url 'add_restaurant_image' restaurant.id %}" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transform transition duration-300 hover:scale-105">
+                    เพิ่มรูปบรรยากาศร้าน
+                </a>
+            </div>
         {% endif %}
 
         <!-- ส่วนแสดงเมนูอาหาร -->
         <div class="p-6">
             <h2 class="text-2xl font-bold text-gray-700 mb-4">เมนูอาหาร</h2>
             {% if foods %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {% for food in foods %}
-                <!-- ใช้ DaisyUI Card -->
-                <div class="card w-full bg-base-100 shadow-xl relative">
-                    <figure class="h-48">
-                        {% if food.image %}
-                        <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-full object-cover">
-                        {% else %}
-                        <div class="flex items-center justify-center h-full text-gray-500">
-                            ไม่มีรูปภาพ
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {% for food in foods %}
+                        <div class="card w-full bg-base-100 shadow-xl relative transform transition duration-500 hover:scale-105">
+                            <figure class="h-48">
+                                {% if food.image %}
+                                    <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="flex items-center justify-center h-full text-gray-500">ไม่มีรูปภาพ</div>
+                                {% endif %}
+                            </figure>
+                            <div class="card-body">
+                                <h3 class="card-title text-lg font-semibold">{{ food.name }}</h3>
+                                <p class="text-gray-700 mb-2">{{ food.description }}</p>
+                                <p class="text-gray-700 mb-2"><strong>ราคา:</strong> {{ food.price }} บาท</p>
+                                {% if food.category.all %}
+                                    <p class="text-gray-700 mb-2">
+                                        <strong>ประเภท:</strong>
+                                        <span class="flex flex-wrap gap-2 mt-1">
+                                            {% for category in food.category.all %}
+                                                <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-lg text-sm">
+                                                    {{ category.name }}
+                                                </span>
+                                            {% endfor %}
+                                        </span>
+                                    </p>
+                                {% else %}
+                                    <p class="text-gray-500">ไม่มีประเภทอาหาร</p>
+                                {% endif %}
+                            </div>
+                            {% if request.user == restaurant.owner %}
+                                <a href="{% url 'edit_food' restaurant.id food.id %}" class="absolute top-2 right-12 bg-blue-500 text-white py-1 px-2 rounded-lg hover:bg-blue-600">แก้ไข</a>
+                                <button onclick="confirmDelete('delete_food', '{{ restaurant.id }}', '{{ food.id }}')" class="absolute top-2 right-2 bg-red-500 text-white py-1 px-2 rounded-lg hover:bg-red-600">ลบ</button>
+                            {% endif %}
                         </div>
-                        {% endif %}
-                    </figure>
-                    <div class="card-body">
-                        <h3 class="card-title text-lg font-semibold">{{ food.name }}</h3>
-                        <p class="text-gray-700 mb-2">{{ food.description }}</p>
-                        <p class="text-gray-700 mb-2"><strong>ราคา:</strong> {{ food.price }} บาท</p>
-                        <!-- แสดงหมวดหมู่และหมวดหมู่ย่อย -->
-                        <div class="card-actions justify-start">
-                            <div class="badge badge-outline">{{ food.category.name }}</div> <!-- หมวดหมู่ -->
-                            <div class="badge badge-outline">{{ food.subcategory.name }}</div> <!-- หมวดหมู่ย่อย -->
-                        </div>
-                    </div>
-                    <!-- ปุ่มลบเมนูอาหาร -->
-                    {% if request.user == restaurant.owner %}
-                    <button class="absolute top-2 right-2 bg-red-500 text-white py-1 px-2 rounded-lg hover:bg-red-600" onclick="confirmDelete('delete_food', '{{ restaurant.id }}', '{{ food.id }}')">
-                        ลบ
-                    </button>
-                    {% endif %}
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
             {% else %}
-            <p class="text-gray-500">ไม่มีเมนูอาหาร</p>
+                <p class="text-gray-500">ไม่มีเมนูอาหาร</p>
             {% endif %}
 
-            <!-- ปุ่มเพิ่มเมนูอาหาร -->
             {% if request.user == restaurant.owner %}
-            <div class="mt-4 text-right">
-                <a href="{% url 'add_food' restaurant.id %}" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600">
-                    เพิ่มเมนูอาหาร
-                </a>
-            </div>
+                <div class="mt-6 text-right">
+                    <a href="{% url 'add_food' restaurant.id %}" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transform transition duration-300 hover:scale-105">
+                        เพิ่มเมนูอาหาร
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        <!-- ส่วนแสดงรีวิว -->
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">รีวิวจากผู้ใช้</h2>
+        <h2 class="text-xl font-bold text-gray-700 mb-4">คะแนนเฉลี่ย</h2>
+    <div class="text-center">
+        <!-- แสดงคะแนนเฉลี่ยเป็นดาว -->
+        <div class="flex items-center justify-center space-x-2">
+            <span class="text-yellow-500 text-2xl">
+                {% for i in "12345" %}
+                    {% if i <= average_rating|floatformat:0 %}
+                        &#9733;
+                    {% else %}
+                        &#9734;
+                    {% endif %}
+                {% endfor %}
+            </span>
+            <span class="text-gray-700 text-lg font-semibold">({{ average_rating|floatformat:1 }} ดาว)</span>
+        </div>
+        <!-- แสดงจำนวนรีวิว -->
+        <p class="text-gray-500 text-sm mt-2">
+            จากผู้รีวิวทั้งหมด
+            <span class="font-semibold text-gray-700">{{ reviews.count }}</span> คน
+        </p>
+    </div>
+
+        <div>
+
+        </div>
+            {% if reviews.exists %}
+                <div class="space-y-6">
+                    {% for review in reviews %}
+                        <div class="flex items-start space-x-4 border-b pb-4">
+                            <!-- รูปโปรไฟล์ -->
+                            <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-300 flex-shrink-0">
+                                {% if review.user.profile.profile_picture %}
+                                    <img src="{{ review.user.profile.profile_picture.url }}" alt="{{ review.user.username }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="flex items-center justify-center w-full h-full text-gray-500">
+                                        <span class="text-sm">ไม่มีรูป</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <!-- เนื้อหาการรีวิว -->
+                            <div class="flex-1">
+                                <!-- คะแนนดาว -->
+                                <div class="flex items-center text-yellow-500 mb-1 star-container" data-rating="{{ review.rating }}"></div>
+                                <!-- ชื่อผู้ใช้และเวลาโพสต์ -->
+                                <p class="text-sm text-gray-500">
+                                    <span class="font-bold text-orange-500">{{ review.user.username }}</span>
+                                    &middot; {{ review.created_at|date:"d M Y เวลา H:i" }}
+                                </p>
+                                <!-- ข้อความรีวิว -->
+                                <p class="mt-2 text-gray-700">{{ review.comment }}</p>
+                                {% if request.user == review.user %}
+                                <div class="flex space-x-2 mt-2">
+                                    <a href="{% url 'edit_review' review.id %}" class="bg-blue-500 text-white py-1 px-2 rounded-lg hover:bg-blue-600">แก้ไข</a>
+                                    <button onclick="openDeleteModal('{{ review.id }}')" class="bg-red-500 text-white py-1 px-2 rounded-lg hover:bg-red-600">ลบ</button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">ยังไม่มีรีวิว</p>
+            {% endif %}
+
+            <!-- ปุ่มเพิ่มรีวิว -->
+            {% if request.user.is_authenticated %}
+                {% if not user_reviewed %}
+                    <div class="mt-6 text-right">
+                        <a href="{% url 'add_review' restaurant.id %}" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transform transition duration-300 hover:scale-105">
+                            เพิ่มรีวิว
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="mt-6 text-right">
+                        <p class="text-gray-500 italic">คุณได้รีวิวร้านนี้แล้ว</p>
+                    </div>
+                {% endif %}
             {% endif %}
         </div>
 
-    </div>
-</div>
-
-<!-- Modal Confirm Delete -->
-<div id="deleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-xs">
-        <h2 class="text-xl font-semibold mb-4">ยืนยันการลบ</h2>
-        <p class="mb-4">คุณต้องการลบรายการนี้ใช่หรือไม่?</p>
-        <div class="flex justify-center space-x-4">
-            <button class="bg-gray-500 text-white py-2 px-4 rounded-lg" onclick="closeModal()">ยกเลิก</button>
-            <a id="confirmDeleteBtn" href="#" class="bg-red-500 text-white py-2 px-4 rounded-lg">ลบ</a>
+        <!-- Modal Confirm Delete -->
+        <div id="deleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm w-full">
+                <h2 class="text-xl font-semibold mb-4">ยืนยันการลบความคิดเห็น</h2>
+                <p class="text-gray-700 text-center mb-6">คุณแน่ใจว่าต้องการลบความคิดเห็นนี้หรือไม่?</p>
+                <div class="flex justify-center space-x-4">
+                    <button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600" onclick="closeDeleteModal()">ยกเลิก</button>
+                    <form id="deleteForm" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">ยืนยัน</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -141,19 +249,42 @@
 <script>
     function confirmDelete(action, restaurantId, itemId) {
         let deleteUrl = '';
-
         if (action === 'delete_image') {
             deleteUrl = "{% url 'delete_image' restaurant.id 0 %}".replace('0', itemId);
         } else if (action === 'delete_food') {
             deleteUrl = "{% url 'delete_food' restaurant.id 0 %}".replace('0', itemId);
         }
-
         document.getElementById('confirmDeleteBtn').setAttribute('href', deleteUrl);
         document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function openDeleteModal(reviewId) {
+        const deleteForm = document.getElementById('deleteForm');
+        deleteForm.action = `{% url 'delete_review' 0 %}`.replace('0', reviewId);
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
     }
 
     function closeModal() {
         document.getElementById('deleteModal').classList.add('hidden');
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.star-container').forEach(container => {
+            const rating = parseInt(container.dataset.rating);
+            let starHtml = '';
+            for (let i = 1; i <= rating; i++) {
+                starHtml += '&#9733;';
+            }
+            for (let i = rating + 1; i <= 5; i++) {
+                starHtml += '&#9734;';
+            }
+            container.innerHTML = starHtml;
+        });
+    });
 </script>
+
 {% endblock %}

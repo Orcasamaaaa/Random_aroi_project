@@ -1,5 +1,5 @@
 from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.urls import path, include
 from core import views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -29,14 +29,17 @@ urlpatterns = [
     path('restaurant/create/', views.restaurant_create, name='restaurant_create'),
     path('restaurant/<int:id>/', views.restaurant_detail, name='restaurant_detail'),
     path('restaurant/<int:id>/edit/', views.restaurant_edit, name='restaurant_edit'),
+    path('restaurant/<int:pk>/delete/', views.delete_restaurant, name='delete_restaurant'),
     path('restaurant/<int:restaurant_id>/delete_image/<int:image_id>/', views.delete_image, name='delete_image'),
+
+    path('restaurant/<int:restaurant_id>/add_image/', views.add_restaurant_image, name='add_restaurant_image'),
+
 
     # เพิ่ม URL สำหรับการจัดการเมนูอาหาร
     path('restaurant/<int:restaurant_id>/add_food/', views.add_food, name='add_food'),  # เพิ่มเมนูอาหาร
     path('restaurant/<int:restaurant_id>/edit_food/<int:food_id>/', views.edit_food, name='edit_food'),  # แก้ไขเมนูอาหาร
     path('restaurant/<int:restaurant_id>/delete_food/<int:food_id>/', views.delete_food, name='delete_food'),
     path('choose_food/<int:food_id>/', views.choose_food, name='choose_food'),# ลบเมนูอาหาร
-
     # กระทู้
     path('forum/', views.forum_list, name='forum'),
     path('forum/create/', views.create_forum, name='forum_create'),
@@ -47,9 +50,12 @@ urlpatterns = [
     path('forum/<int:forum_id>/edit/', views.forum_edit, name='forum_edit'),
     path('forum/<int:pk>/delete/', views.forum_delete, name='forum_delete'),
     path('forum/<int:forum_id>/comment/', views.add_comment, name='add_comment'),  # ส่งความคิดเห็น
-    path('forum/<int:forum_id>/comments/', views.load_comments, name='load_comments'),  # โหลดความคิดเห็นแบบ HTMX
     path('comments/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
-
+    path('comments/<int:comment_id>/edit/', views.edit_comment, name='edit_comment'),
+    path("select2/", include("django_select2.urls")),
+    path('restaurant/<int:restaurant_id>/review/', views.add_review, name='add_review'),
+    path('review/<int:review_id>/delete/', views.delete_review, name='delete_review'),
+    path('review/<int:review_id>/edit/', views.edit_review, name='edit_review'),
 ]
 
 

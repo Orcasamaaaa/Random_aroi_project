@@ -66,6 +66,13 @@ class RestaurantImageForm(forms.ModelForm):
     class Meta:
         model = RestaurantImage
         fields = ['image']
+        widgets = {
+            'image': forms.ClearableFileInput(attrs={
+                'class': 'border rounded-lg p-2 w-full',
+                'accept': 'image/*',
+            }),
+        }
+
 
 
 class FoodForm(forms.ModelForm):
@@ -86,22 +93,63 @@ class FoodFilterForm(forms.Form):
         queryset=Category.objects.all(),
         required=False,
         label="ประเภทอาหาร",
-        widget=forms.CheckboxSelectMultiple,  # ใช้ checkbox เพื่อให้เลือกหลายตัว
+        widget=forms.SelectMultiple(attrs={
+            'class': 'select2',  # ใช้ Select2
+            'id': 'category-select',
+        }),
     )
     min_price = forms.DecimalField(
         required=False,
         min_value=0,
         label="ราคาขั้นต่ำ",
-        widget=forms.NumberInput(attrs={'step': '0.01'}),  # เพิ่ม step สำหรับราคาทศนิยม
+        widget=forms.NumberInput(attrs={
+            'step': '0.01',
+            'class': 'form-input',
+        }),
     )
     max_price = forms.DecimalField(
         required=False,
         min_value=0,
         label="ราคาสูงสุด",
-        widget=forms.NumberInput(attrs={'step': '0.01'}),  # เพิ่ม step สำหรับราคาทศนิยม
+        widget=forms.NumberInput(attrs={
+            'step': '0.01',
+            'class': 'form-input',
+        }),
     )
+
 
 class ForumForm(forms.ModelForm):
     class Meta:
         model =Forum
         fields = ['title','content','image']
+
+
+class ForumCommentForm(forms.ModelForm):
+    class Meta:
+        model = ForumComment
+        fields = ['content']  # ใช้เฉพาะฟิลด์สำหรับเนื้อหา
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control bg-gray-100 border border-gray-300 rounded-lg p-2 w-full',
+                'placeholder': 'Edit your comment...',
+                'rows': 4,
+            }),
+        }
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']
+        widgets = {
+            'rating': forms.NumberInput(attrs={
+                'min': 1,
+                'max': 5,
+                'step': 1,
+                'class': 'form-control',
+                'placeholder': 'คะแนน (1-5)'
+            }),
+            'comment': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'ความคิดเห็นของคุณ...'
+            })
+        }
