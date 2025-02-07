@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block main %}
+<div class="container mx-auto py-12 px-6">
+    <div class="max-w-2xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+        <!-- รูปภาพของอาหาร -->
+        <div class="h-64 w-full bg-gray-100 flex items-center justify-center">
+            {% if food.image %}
+                <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-full object-cover">
+            {% else %}
+                <span class="text-gray-500">ไม่มีรูปภาพ</span>
+            {% endif %}
+        </div>
+        <div class="p-6 text-center">
+            <!-- ชื่ออาหาร -->
+            <h2 class="text-3xl font-bold text-orange-600 mb-2">{{ food.name }}</h2>
+            <p class="text-gray-700 text-md mb-4">{{ food.description }}</p>
+            <p class="text-lg font-semibold text-gray-800">💰 ราคา: {{ food.price }} บาท</p>
+
+            <!-- บอกว่ามาจากร้านไหน -->
+            <p class="text-md text-gray-600 mt-2">
+                🏠 ร้าน:
+                <a href="{% url 'restaurant_detail' food.restaurant.id %}" class="text-blue-500 hover:underline">
+                    {{ food.restaurant.name }}
+                </a>
+            </p>
+
+            <!-- ⭐ คะแนนเฉลี่ยของร้าน -->
+            <p class="text-md text-gray-600 mt-2">
+                ⭐ คะแนนเฉลี่ย:
+                {% if food.restaurant.review_set.exists %}
+                    {{ food.restaurant.review_set.aggregate_avg.rating|floatformat:1 }}/5
+                {% else %}
+                    <span class="text-gray-500">ยังไม่มีคะแนนรีวิว</span>
+                {% endif %}
+            </p>
+
+            <!-- ประเภทอาหาร -->
+            {% if food.category.all %}
+            <p class="text-gray-700 text-md mt-2">
+                🍽️ ประเภท:
+                {% for cat in food.category.all %}
+                    {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+            {% endif %}
+
+            <!-- ปุ่มกลับ -->
+            <div class="mt-6">
+                <a href="{% url 'food_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg shadow-lg font-semibold">
+                    🔙 กลับไปหน้าเมนูอาหาร
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

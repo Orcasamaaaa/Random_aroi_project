@@ -1,0 +1,159 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="container mx-auto py-10">
+    <div class="bg-white shadow-md rounded-lg p-8 max-w-4xl mx-auto">
+        <h1 class="text-3xl font-extrabold text-orange-500 mb-8 text-center">แก้ไขข้อมูลร้านอาหาร</h1>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-8">
+            {% csrf_token %}
+            <!-- รูปโปรไฟล์ร้าน -->
+            <div class="text-center">
+    <label class="block text-gray-700 font-semibold mb-2">รูปโปรไฟล์ร้าน (ปัจจุบัน)</label>
+    {% if restaurant.images %}
+        <img src="{{ restaurant.images.url }}" alt="โปรไฟล์ร้าน" id="currentProfilePic"
+             class="w-32 h-32 object-cover rounded-full shadow-lg mx-auto">
+    {% else %}
+        <div class="bg-gray-300 w-32 h-32 rounded-full flex items-center justify-center text-gray-500 shadow-lg mx-auto">
+            ไม่มีรูปภาพ
+        </div>
+    {% endif %}
+</div>
+
+            <!-- อัพโหลดรูปใหม่ -->
+           <div class="text-center mt-6">
+                <label class="block text-gray-700 font-semibold mb-2">อัพโหลดรูปโปรไฟล์ร้านใหม่</label>
+                <input type="file" name="images" id="profileImageInput" class="w-full md:w-1/2 border border-gray-300 rounded-lg p-2 mx-auto">
+                <!-- พรีวิวรูปภาพใหม่ที่กำลังจะอัปโหลด -->
+                <div class="mt-4">
+                    <img id="profileImagePreview" src="#" alt="พรีวิวรูปโปรไฟล์ใหม่" class="w-32 h-32 object-cover rounded-full hidden mx-auto">
+                </div>
+            </div>
+
+            <!-- ฟิลด์ข้อมูลร้าน -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <label class="block text-gray-700 font-semibold">ชื่อร้านอาหาร</label>
+                    {{ form.name }}
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold">รายละเอียดร้านอาหาร</label>
+                    {{ form.description }}
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold">ที่ตั้ง</label>
+                    {{ form.location }}
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold">เบอร์ติดต่อ</label>
+                    {{ form.contact_info }}
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold">เวลาเปิด-ปิด</label>
+                    {{ form.opening_hours }}
+                </div>
+
+                <!-- หมวดหมู่ร้านอาหาร -->
+                <div>
+                    <label for="categories" class="block text-gray-700">ประเภทของร้านอาหาร</label>
+                    <select id="categories" name="categories" multiple
+                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500">
+                        {% for category in form.categories.field.queryset %}
+                            <option value="{{ category.id }}"
+                                {% if category.id in form.categories.value %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Social Media ฟิลด์ -->
+                <div>
+                    <label for="social_media" class="block text-gray-700">ลิงก์ Social Media</label>
+                    <input type="text" id="social_media" name="social_media"
+                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                           placeholder="ลิงก์ Social Media (ถ้ามี)"
+                           value="{{ form.social_media.value|default_if_none:'' }}">
+                </div>
+            </div>
+        <div class="text-center mt-8">
+    <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg">
+        บันทึกข้อมูล
+    </button>
+    </div>
+
+        </form>
+
+        <!-- ปุ่มลบร้านอาหาร -->
+        <div class="text-center mt-8">
+            <button onclick="openDeleteModal()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg">
+                ลบร้านอาหาร
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ยืนยันการลบ -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm relative">
+        <button onclick="closeDeleteModal()" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800">
+            &times;
+        </button>
+        <h2 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบร้านอาหาร</h2>
+        <p class="text-gray-600 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบร้านอาหารนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+
+        <div class="flex justify-end space-x-4">
+            <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                ยกเลิก
+            </button>
+           <form method="post" action="{% url 'delete_restaurant' restaurant.id %}">
+    {% csrf_token %}
+    <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+        ยืนยันลบ
+    </button>
+</form>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<!-- Select2 Scripts -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script>
+    function openDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    // File upload preview
+     document.getElementById('profileImageInput').addEventListener('change', function(event) {
+        const preview = document.getElementById('profileImagePreview');
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.classList.remove('hidden'); // แสดงรูปพรีวิว
+        };
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Initialize Select2
+    $(document).ready(function() {
+        $('#categories').select2({
+            placeholder: "เลือกหมวดหมู่ร้านอาหาร",
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -18,31 +18,89 @@
     <div class="px-6 py-8">
       <!-- ข้อมูลส่วนตัว -->
       <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">ข้อมูลส่วนตัว</h2>
-      <div class="grid grid-cols-2 gap-4 mb-8">
-        <div class="bg-gray-100 p-4 rounded-lg">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-gray-100 p-6 rounded-lg shadow-lg">
           <p class="text-lg font-semibold text-gray-700">ชื่อจริง:</p>
           <p class="text-xl text-gray-900">{{ profile.first_name }}</p>
         </div>
-        <div class="bg-gray-100 p-4 rounded-lg">
+        <div class="bg-gray-100 p-6 rounded-lg shadow-lg">
           <p class="text-lg font-semibold text-gray-700">นามสกุล:</p>
           <p class="text-xl text-gray-900">{{ profile.last_name }}</p>
         </div>
-        <div class="bg-gray-100 p-4 rounded-lg">
+        <div class="bg-gray-100 p-6 rounded-lg shadow-lg">
           <p class="text-lg font-semibold text-gray-700">อีเมล:</p>
           <p class="text-xl text-gray-900">{{ profile.user.email }}</p>
         </div>
-        <div class="bg-gray-100 p-4 rounded-lg">
+        <div class="bg-gray-100 p-6 rounded-lg shadow-lg">
           <p class="text-lg font-semibold text-gray-700">ชื่อผู้ใช้:</p>
           <p class="text-xl text-gray-900">{{ profile.user.username }}</p>
         </div>
       </div>
 
+      <!-- ร้านอาหารที่เคยบันทึก -->
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">ร้านอาหารที่บันทึก</h2>
+      {% if saved_restaurants %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
+        {% for restaurant in saved_restaurants %}
+        <a href="{% url 'restaurant_detail' restaurant.id %}"
+           class="block bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition transform hover:scale-105">
+          <div class="relative">
+            {% if restaurant.images %}
+            <img src="{{ restaurant.images.url }}" alt="{{ restaurant.name }}" class="w-full h-40 object-cover">
+            {% else %}
+            <div class="h-40 bg-gray-200 flex items-center justify-center text-gray-500">ไม่มีรูปภาพ</div>
+            {% endif %}
+          </div>
+          <div class="p-4">
+            <h4 class="text-lg font-bold text-gray-800">{{ restaurant.name }}</h4>
+            <p class="text-gray-600 text-sm mt-2">ประเภท:
+              {% for category in restaurant.categories.all %}
+              {{ category.name }}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </p>
+            <p class="text-gray-700 mt-2 font-semibold">เวลาเปิดปิด: {{ restaurant.opening_hours }}</p>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-gray-500 text-center mt-6">ยังไม่มีร้านอาหารที่บันทึก</p>
+      {% endif %}
+
+      <!-- กระทู้ที่บันทึกไว้ -->
+      <div class="bg-white shadow-lg rounded-lg p-6 mt-10">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">กระทู้ที่บันทึกไว้</h2>
+        {% if saved_forums %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for forum in saved_forums %}
+            <a href="{% url 'forum_detail' forum.id %}" class="block bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transform hover:scale-105 transition duration-300">
+                <div class="relative">
+                    {% if forum.image %}
+                    <img src="{{ forum.image.url }}" alt="{{ forum.title }}" class="w-full h-40 object-cover">
+                    {% else %}
+                    <div class="h-40 bg-gray-200 flex items-center justify-center text-gray-500">
+                        ไม่มีรูปภาพ
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg font-bold text-gray-800">{{ forum.title }}</h3>
+                    <p class="text-sm text-gray-600 mt-2">
+                        {{ forum.created_at|date:"d M Y" }}
+                    </p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center">ยังไม่มีการบันทึกกระทู้</p>
+        {% endif %}
+      </div>
+
       <!-- รายการอาหารที่เคยสุ่ม -->
       <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">รายการอาหารที่เคยสุ่ม</h2>
-
       {% if liked_foods or disliked_foods %}
       <div class="space-y-10">
-        <!-- รายการอาหารที่ชอบ -->
         {% if liked_foods %}
         <div>
           <h3 class="text-xl font-semibold text-green-600 mb-4">อาหารที่ชอบ</h3>
@@ -70,7 +128,6 @@
         </div>
         {% endif %}
 
-        <!-- รายการอาหารที่ไม่ชอบ -->
         {% if disliked_foods %}
         <div>
           <h3 class="text-xl font-semibold text-red-600 mb-4">อาหารที่ไม่ชอบ</h3>

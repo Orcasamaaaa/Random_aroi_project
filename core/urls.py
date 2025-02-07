@@ -40,6 +40,8 @@ urlpatterns = [
     path('restaurant/<int:restaurant_id>/edit_food/<int:food_id>/', views.edit_food, name='edit_food'),  # แก้ไขเมนูอาหาร
     path('restaurant/<int:restaurant_id>/delete_food/<int:food_id>/', views.delete_food, name='delete_food'),
     path('choose_food/<int:food_id>/', views.choose_food, name='choose_food'),# ลบเมนูอาหาร
+    path('foods/', views.food_list, name='food_list'),  # เพิ่มบรรทัดนี้
+
     # กระทู้
     path('forum/', views.forum_list, name='forum'),
     path('forum/create/', views.create_forum, name='forum_create'),
@@ -56,8 +58,24 @@ urlpatterns = [
     path('restaurant/<int:restaurant_id>/review/', views.add_review, name='add_review'),
     path('review/<int:review_id>/delete/', views.delete_review, name='delete_review'),
     path('review/<int:review_id>/edit/', views.edit_review, name='edit_review'),
+    path('restaurant/<int:restaurant_id>/toggle-save/', views.toggle_save_restaurant, name='toggle_save_restaurant'),
+    path('forum/<int:forum_id>/toggle_save/', views.toggle_save_forum, name='toggle_save_forum'),
+
+
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('manage-users/', views.manage_users, name='manage_users'),  # หน้าแสดงผู้ใช้ทั้งหมด
+    path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),  # หน้าแก้ไขข้อมูลผู้ใช้
+    path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),  # ลบผู้ใช้
+    path('manage-restaurants/', views.manage_restaurants, name='manage_restaurants'),
+    path('superuser/edit-restaurant/<int:restaurant_id>/', views.admin_edit_restaurant, name='edit_restaurant'),
+    path('superuser/restaurant/<int:restaurant_id>/delete/', views.admin_delete_restaurant, name='admin_delete_restaurant'),
+    path('manage-forums/', views.manage_forums, name='manage_forums'),  # หน้าจัดการกระทู้
+    path('superuser/edit-forum/<int:forum_id>/', views.admin_edit_forum, name='edit_forum'),  # แก้ไขกระทู้
+    path('superuser/delete-forum/<int:forum_id>/', views.admin_delete_forum, name='delete_forum'),  # ลบกระทู้
+    path('recommend-food/', views.recommend_food, name='recommend_food'),
+    path('food/<int:id>/', views.food_detail, name='food_detail'),
+
+
 ]
-
-
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

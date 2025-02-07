@@ -1,49 +1,70 @@
 {% extends 'core/base.html' %}
-
 {% block main %}
 <div class="container mx-auto py-10 px-4">
-    <h1 class="text-3xl font-bold mb-6">ร้านอาหารทั้งหมด</h1>
+    <!-- ส่วนหัว -->
+    <header class="mb-10 text-center">
+        <h1 class="text-4xl font-bold text-orange-500 mb-4">ร้านอาหารทั้งหมด</h1>
+        <p class="text-gray-700 text-lg">ค้นพบและสำรวจร้านอาหารที่น่าสนใจทั้งหมดได้ที่นี่!</p>
+    </header>
+
+    <!-- รายการร้านอาหาร -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for restaurant in restaurants %}
         <!-- ห่อ div ของร้านอาหารทั้งหมดด้วย a tag -->
-        <a href="{% url 'restaurant_detail' restaurant.id %}" class="block h-full">
-            <div class="bg-white shadow-lg rounded-lg overflow-hidden transition hover:shadow-xl flex flex-col h-full">
+        <a href="{% url 'restaurant_detail' restaurant.id %}" class="block h-full group">
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden transition hover:shadow-xl flex flex-col h-full transform hover:-translate-y-2 duration-300">
                 <!-- รูปภาพร้านอาหาร -->
-                <div class="h-48 w-full">
+                <div class="h-48 w-full relative">
                     {% if restaurant.images %}
                     <img src="{{ restaurant.images.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover">
                     {% else %}
                     <div class="flex items-center justify-center h-full bg-gray-300 text-gray-500">
-                        ไม่มีรูปภาพ
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 12m-2 2l-1.586 1.586a2 2 0 01-2.828 0L12 12m0 0V8m4 0h-4" />
+                        </svg>
                     </div>
                     {% endif %}
                 </div>
-
                 <!-- รายละเอียดร้าน -->
                 <div class="p-6 flex-grow flex flex-col">
                     <!-- ชื่อร้าน -->
                     <h2 class="text-xl font-bold text-orange-500 mb-2">{{ restaurant.name }}</h2>
-
                     <!-- คำอธิบายร้าน -->
-                    <p class="text-gray-700 mb-4 flex-grow">{{ restaurant.description|truncatewords:20 }}</p>
-
+                    <p class="text-gray-700 mb-4 line-clamp-3">{{ restaurant.description|truncatewords:20|default:"ไม่มีคำอธิบาย" }}</p>
                     <!-- หมวดหมู่ร้านอาหาร -->
-                    <p class="text-sm text-gray-600 mt-auto">
-                        <strong>หมวดหมู่:</strong>
-                        {% if restaurant.categories.all %}
-                            {% for category in restaurant.categories.all %}
-                                <span class="inline-block bg-gray-200 rounded px-2 py-1 text-sm text-gray-700 mr-2">
-                                    {{ category.name }}
-                                </span>
-                            {% endfor %}
-                        {% else %}
-                            <span class="text-gray-500">ไม่มีหมวดหมู่</span>
-                        {% endif %}
-                    </p>
+                    <div class="mt-auto">
+                        <p class="text-sm text-gray-600 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            <strong>หมวดหมู่:</strong>
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            {% if restaurant.categories.all %}
+                                {% for category in restaurant.categories.all %}
+                                    <span class="inline-block bg-orange-100 text-orange-700 rounded-full px-3 py-1 text-xs font-medium">
+                                        {{ category.name }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-gray-500 text-sm">ไม่มีหมวดหมู่</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </a>
         {% endfor %}
     </div>
+
+    <!-- หากไม่มีร้านอาหาร -->
+    {% if not restaurants %}
+    <div class="text-center mt-10">
+        <p class="text-gray-500 text-lg">ยังไม่มีร้านอาหารในขณะนี้</p>
+        <a href="{% url 'restaurant_create' %}" class="inline-block mt-4 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md text-sm font-medium transition duration-300">
+            เพิ่มร้านอาหารใหม่
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

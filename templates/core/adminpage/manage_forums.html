@@ -1,0 +1,128 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="container mx-auto py-10 px-4">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-800">จัดการกระทู้</h2>
+        <div class="flex gap-4">
+            <!-- ฟอร์มค้นหา -->
+            <form method="get" class="flex gap-2">
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ request.GET.search }}"
+                    placeholder="ค้นหากระทู้..."
+                    class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                    ค้นหา
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        หัวข้อ
+                    </th>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        เจ้าของกระทู้
+                    </th>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        วันที่สร้าง
+                    </th>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        จำนวนความคิดเห็น
+                    </th>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        จัดการ
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for forum in forums %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div>
+                                <a href="{% url 'forum_detail' forum.id %}" class="text-lg font-medium text-gray-900 hover:text-blue-600">
+                                    {{ forum.title }}
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-700">{{ forum.user.username }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm text-gray-700">{{ forum.created_at|date:"d/m/Y H:i" }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm text-gray-700">{{ forum.comments.count }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-4">
+                            <a href="{% url 'edit_forum' forum.id %}" class="text-blue-600 hover:text-blue-900 font-medium">
+                                แก้ไข
+                            </a>
+                            <!-- Trigger modal -->
+                            <button class="text-red-500 hover:text-red-900 font-medium" onclick="openDeleteModal('{{ forum.id }}')">
+                                ลบ
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center">
+                        <div class="text-gray-500 text-lg">
+                            ไม่พบข้อมูลกระทู้
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Confirmation -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบร้านอาหาร</h2>
+        <p class="text-gray-600 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบร้านอาหารนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+        <!-- ฟอร์มสำหรับการลบร้านอาหาร -->
+        <form method="POST" id="deleteForm" action="{% url 'delete_forum' 0 %}">
+            {% csrf_token %}
+            <input type="hidden" name="forum_id" id="forumId">
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">ยกเลิก</button>
+                <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">ยืนยัน</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // เปิด Modal และใส่ forum_id ลงใน input hidden
+    function openDeleteModal(forumId) {
+        document.getElementById('forumId').value = forumId; // กำหนด id ของกระทู้ที่ต้องการลบ
+        const deleteForm = document.getElementById('deleteForm');
+        deleteForm.action = "{% url 'delete_forum' 0 %}".replace('0', forumId);  // ตั้งค่า action ของฟอร์ม
+        document.getElementById('deleteModal').classList.remove('hidden'); // เปิด modal
+    }
+
+    // ปิด Modal
+    function closeModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

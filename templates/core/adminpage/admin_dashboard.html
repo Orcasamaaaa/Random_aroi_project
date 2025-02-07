@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="container mx-auto py-10 px-4">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard Admin</h1>
+        <p>ยินดีต้อนรับเข้าสู่แดชบอร์ดของแอดมิน!</p>
+
+        <h2 class="text-xl font-semibold text-gray-700 mt-6 mb-4">การจัดการระบบ</h2>
+        <ul class="list-disc pl-6">
+            <li><a href="{% url 'manage_users' %}" class="text-blue-500 hover:text-blue-700">จัดการผู้ใช้งาน</a></li>
+            <li><a href="{% url 'manage_restaurants' %}" class="text-blue-500 hover:text-blue-700">จัดการร้านอาหาร</a></li>
+            <li><a href="{% url 'manage_forums' %}" class="text-blue-500 hover:text-blue-700">จัดการกระทู้</a></li>
+        </ul>
+    </div>
+</div>
+     <div id="chart"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        var options = {
+            chart: {
+                type: 'bar'
+            },
+            series: [{
+                name: 'จำนวน',
+                data: [
+                    {{ total_users }},
+                    {{ total_restaurants }},
+                    {{ total_forums }}
+                ]
+            }],
+            xaxis: {
+                categories: ['ผู้ใช้', 'ร้านอาหาร', 'กระทู้']
+            }
+        };
+
+        var chart = new ApexCharts(document.querySelector("#chart"), options);
+        chart.render();
+    </script>
+</div>
+{% endblock %}

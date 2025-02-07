@@ -1,0 +1,57 @@
+{% extends 'core/base.html' %}
+{% block main %}
+<div class="container mx-auto py-12 px-6">
+    <h1 class="text-4xl font-extrabold text-orange-600 text-center mb-8">🍽️ แนะนำอาหารสำหรับคุณ</h1>
+
+    {% if recommendations %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for food in recommendations %}
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200 transition transform hover:scale-105">
+            <div class="h-56 w-full bg-gray-100 flex items-center justify-center">
+                {% if food.image %}
+                <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-full object-cover">
+                {% else %}
+                <span class="text-gray-500">ไม่มีรูปภาพ</span>
+                {% endif %}
+            </div>
+            <div class="p-6 text-center">
+                <h2 class="text-2xl font-bold text-orange-600 mb-2">{{ food.name }}</h2>
+                <p class="text-lg font-semibold text-gray-800">💰 ราคา: {{ food.price }} บาท</p>
+
+                <p class="text-md text-gray-600 mt-2">
+                    🏠 ร้าน:
+                    <a href="{% url 'restaurant_detail' food.restaurant.id %}" class="text-blue-500 hover:underline">
+                        {{ food.restaurant.name }}
+                    </a>
+                </p>
+
+                <p class="text-md text-gray-600 mt-2">
+                    ⭐ คะแนนเฉลี่ย:
+                    {% with food.restaurant.review_set.aggregate_avg.rating as avg_rating %}
+                        {% if avg_rating %}
+                            {{ avg_rating|floatformat:1 }}/5
+                        {% else %}
+                            <span class="text-gray-500">ยังไม่มีคะแนนรีวิว</span>
+                        {% endif %}
+                    {% endwith %}
+                </p>
+
+                <p class="text-gray-700 text-md mt-2">
+                    🍽️ ประเภท:
+                    {% for cat in food.category.all %}
+                        {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+
+                <a href="{% url 'food_detail' food.id %}" class="mt-4 inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
+                    ดูรายละเอียด
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-500 text-center">❌ ไม่พบคำแนะนำ กรุณาลองให้คะแนนอาหารก่อน</p>
+    {% endif %}
+</div>
+{% endblock %}

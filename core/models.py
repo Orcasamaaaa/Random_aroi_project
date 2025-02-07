@@ -29,6 +29,7 @@ class Restaurant(models.Model):
     social_media = models.TextField(null=True, blank=True)
     images = models.ImageField(upload_to='restaurant_images/', null=True, blank=True)
     categories = models.ManyToManyField(RestaurantCategory, related_name='restaurants')  # เปลี่ยนชื่อ field
+    saved_by = models.ManyToManyField(User, related_name='saved_restaurants', blank=True)  # ฟิลด์สำหรับบันทึกร้านอาหาร
 
     def __str__(self):
         return self.name
@@ -84,6 +85,7 @@ class Forum(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to='forum_images/', null=True, blank=True)
+    saved_by = models.ManyToManyField(User, related_name='saved_forums', blank=True)  # เพิ่มฟิลด์นี้
 
     def __str__(self):
         return self.title
@@ -106,4 +108,3 @@ class LikeDislikeFood(models.Model):
     food = models.ForeignKey('Food', on_delete=models.CASCADE, related_name='likes_dislikes')
     liked = models.BooleanField()  # True = ชอบ, False = ไม่ชอบ
     timestamp = models.DateTimeField(auto_now_add=True)  # บันทึกเวลาที่ชอบ/ไม่ชอบ
-

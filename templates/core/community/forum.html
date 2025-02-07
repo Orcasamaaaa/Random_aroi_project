@@ -1,39 +1,74 @@
 {% extends 'core/base.html' %}
-
 {% block main %}
 <div class="container mx-auto py-10 px-4">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-4xl font-bold text-orange-600">กระทู้ทั้งหมด</h1>
+    <!-- ส่วนหัว -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-4xl font-bold text-orange-500 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            กระทู้ทั้งหมด
+        </h1>
         <div class="flex space-x-4">
-            <a href="{% url 'forum_create' %}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                + สร้างกระทู้ใหม่
+            <!-- ปุ่มสร้างกระทู้ใหม่ -->
+            <a href="{% url 'forum_create' %}" class="bg-orange-500 hover:bg-orange-500 text-white px-6 py-2 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                สร้างกระทู้ใหม่
             </a>
-            <a href="{% url 'my_forums' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg shadow-md transition-transform transform hover:scale-105">
+            <!-- ปุ่มกระทู้ของฉัน -->
+            <a href="{% url 'my_forums' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
                 กระทู้ของฉัน
             </a>
         </div>
     </div>
 
+    <!-- รายการกระทู้ -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for forum in forums %}
-        <a href="{% url 'forum_detail' forum.id %}" class="block bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            {% if forum.image %}
-            <img src="{{ forum.image.url }}" alt="{{ forum.title }}" class="w-full h-48 object-cover">
-            {% else %}
-            <div class="h-48 w-full bg-gray-200 flex items-center justify-center text-gray-500">
-                ไม่มีรูปภาพ
+        <a href="{% url 'forum_detail' forum.id %}" class="block bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1">
+            <!-- รูปภาพ -->
+            <div class="h-48 w-full relative">
+                {% if forum.image %}
+                <img src="{{ forum.image.url }}" alt="{{ forum.title }}" class="w-full h-full object-cover">
+                {% else %}
+                <div class="flex items-center justify-center h-full bg-gray-300 text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 12m-2 2l-1.586 1.586a2 2 0 01-2.828 0L12 12m0 0V8m4 0h-4" />
+                    </svg>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
+            <!-- รายละเอียดกระทู้ -->
             <div class="p-6">
+                <!-- ชื่อกระทู้ -->
                 <h2 class="text-xl font-bold text-gray-800 mb-2">{{ forum.title }}</h2>
-                <p class="text-gray-700">{{ forum.content|truncatewords:20 }}</p>
+                <!-- เนื้อหา -->
+                <p class="text-gray-700 line-clamp-3">{{ forum.content|truncatewords:20|default:"ไม่มีเนื้อหา" }}</p>
+                <!-- ข้อมูลเพิ่มเติม -->
+                <div class="mt-4 flex items-center text-sm text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{ forum.created_at|timesince }} ที่แล้ว
+                </div>
             </div>
         </a>
         {% endfor %}
     </div>
 
+    <!-- หากไม่มีกระทู้ -->
     {% if not forums %}
-    <p class="text-center text-gray-500 mt-10">ยังไม่มีการสร้างกระทู้</p>
+    <div class="text-center mt-10">
+        <p class="text-gray-500 text-lg">ยังไม่มีการสร้างกระทู้ในขณะนี้</p>
+        <a href="{% url 'forum_create' %}" class="inline-block mt-4 bg-orange-500 hover:bg-orange-500 text-white px-6 py-2 rounded-md text-sm font-medium transition duration-300">
+            + สร้างกระทู้ใหม่
+        </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -111,3 +111,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'orcanihao@gmail.com'  # อีเมลที่ใช้ส่งลิงก์รีเซ็ตรหัสผ่าน
 EMAIL_HOST_PASSWORD = 'yvmz dmoj xwnn yggi'  # รหัสผ่านอีเมลของคุณ
+
+
+LOGIN_URL = '/login/'

@@ -3,44 +3,59 @@
 
 {% block main %}
 <div class="container mx-auto py-12 px-6">
-    <h1 class="text-4xl font-extrabold text-orange-600 text-center mb-12">สุ่มอาหาร</h1>
+    <h1 class="text-4xl font-extrabold text-orange-600 text-center mb-8">🍽️ สุ่มอาหาร</h1>
 
-    <!-- ฟอร์มสำหรับการกรอง -->
-    <form method="get" class="bg-white shadow-md rounded-lg p-8 mb-10 max-w-3xl mx-auto border border-gray-200">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <!-- หมวดหมู่ -->
-            <div class="flex flex-col">
-                <label for="category-select" class="block text-gray-700">ประเภทอาหาร</label>
-                <select id="category-select" name="category" multiple class="select2 border-gray-300 rounded-lg shadow-sm">
+    <!-- ฟอร์มกรองอาหาร -->
+    <form method="get" class="bg-white shadow-md rounded-lg p-6 mb-8 max-w-3xl mx-auto border border-gray-200">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- หมวดหมู่อาหาร -->
+            <div>
+                <label for="category-select" class="block text-gray-700 font-semibold">ประเภทอาหาร</label>
+                <select id="category-select" name="category" multiple class="select2 border-gray-300 rounded-lg w-full">
                     {% for cat in form.category.field.queryset %}
-                        <option value="{{ cat.id }}"
-                            {% if cat.id|stringformat:"s" in form.category.value|default:'' %}selected{% endif %}>
+                        <option value="{{ cat.id }}" {% if cat.id|stringformat:"s" in form.category.value|default:'' %}selected{% endif %}>
                             {{ cat.name }}
                         </option>
                     {% endfor %}
                 </select>
             </div>
             <!-- ราคาขั้นต่ำ -->
-            <div class="flex flex-col">
+            <div>
                 {{ form.min_price.label_tag }}
                 {{ form.min_price }}
             </div>
             <!-- ราคาสูงสุด -->
-            <div class="flex flex-col">
+            <div>
                 {{ form.max_price.label_tag }}
                 {{ form.max_price }}
             </div>
         </div>
         <div class="flex justify-center">
-            <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
-                กรองและสุ่มอาหาร
+            <button type="submit" id="randomizeButton" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-110">
+                🎲 กรองและสุ่มอาหาร
             </button>
         </div>
     </form>
 
-    <!-- แสดงผลอาหารที่สุ่มได้ -->
+    <!-- แสดงข้อความถ้าไม่มีอาหาร -->
+    {% if messages %}
+    <div class="max-w-3xl mx-auto mb-6">
+        {% for message in messages %}
+        <div class="p-4 rounded-lg text-center {% if message.tags == 'warning' %} bg-yellow-100 text-yellow-800 {% elif message.tags == 'error' %} bg-red-100 text-red-800 {% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- เอฟเฟกต์โหลดระหว่างสุ่ม -->
+    <div id="loading" class="hidden flex justify-center my-6">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-orange-500"></div>
+    </div>
+
+    <!-- แสดงอาหารที่สุ่มได้ -->
     {% if food %}
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto border border-gray-200">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto border border-gray-200 transition transform hover:scale-105">
         <div class="h-56 w-full bg-gray-100 flex items-center justify-center">
             {% if food.image %}
                 <img src="{{ food.image.url }}" alt="{{ food.name }}" class="w-full h-full object-cover">
@@ -48,60 +63,71 @@
                 <span class="text-gray-500">ไม่มีรูปภาพ</span>
             {% endif %}
         </div>
-        <div class="p-8 text-center">
-            <h2 class="text-2xl font-bold text-orange-600 mb-3">{{ food.name }}</h2>
+        <div class="p-6 text-center">
+            <h2 class="text-2xl font-bold text-orange-600 mb-2">{{ food.name }}</h2>
             <p class="text-gray-700 text-md mb-4">{{ food.description }}</p>
-            <p class="text-lg font-semibold text-gray-800">ราคา: {{ food.price }} บาท</p>
+            <p class="text-lg font-semibold text-gray-800">💰 ราคา: {{ food.price }} บาท</p>
+
+            <!-- บอกว่ามาจากร้านไหน -->
+            <p class="text-md text-gray-600 mt-2">
+                🏠 ร้าน:
+                <a href="{% url 'restaurant_detail' food.restaurant.id %}" class="text-blue-500 hover:underline">
+                    {{ food.restaurant.name }}
+                </a>
+            </p>
+
+            <!-- ⭐ คะแนนเฉลี่ยของร้าน -->
+            <p class="text-md text-gray-600 mt-2">
+                ⭐ คะแนนเฉลี่ยร้านอาหาร:
+                {% if avg_rating %}
+                    {{ avg_rating }}/5
+                    <span class="text-yellow-500">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= avg_rating|floatformat:0 %}
+                                ★
+                            {% else %}
+                                ☆
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                {% else %}
+                    <span class="text-gray-500">ยังไม่มีคะแนนรีวิว</span>
+                {% endif %}
+            </p>
 
             <!-- แสดงประเภทอาหาร -->
             {% if food.category.all %}
             <p class="text-gray-700 text-md mt-2">
-                <strong>ประเภทอาหาร:</strong>
+                🍽️ ประเภท:
                 {% for cat in food.category.all %}
                     {{ cat.name }}{% if not forloop.last %}, {% endif %}
                 {% endfor %}
             </p>
             {% endif %}
 
-            <!-- ปุ่มชอบและไม่ชอบ -->
+            <!-- ปุ่มชอบ/ไม่ชอบ -->
             {% if user.is_authenticated %}
             <form method="post" class="flex justify-center gap-4 mt-4">
                 {% csrf_token %}
                 <input type="hidden" name="food_id" value="{{ food.id }}">
-                <button type="submit" name="action" value="like" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
-                    ชอบ
+                <button type="submit" name="action" value="like" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg font-semibold transition-transform hover:scale-110">
+                    👍 ชอบ
                 </button>
-                <button type="submit" name="action" value="dislike" class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
-                    ไม่ชอบ
+                <button type="submit" name="action" value="dislike" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg shadow-lg font-semibold transition-transform hover:scale-110">
+                    👎 ไม่ชอบ
                 </button>
             </form>
             {% else %}
-            <button onclick="openModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
-                กรุณาเข้าสู่ระบบ
+            <button onclick="openModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg shadow-lg font-semibold transition-transform hover:scale-110">
+                🔑 กรุณาเข้าสู่ระบบ
             </button>
             {% endif %}
         </div>
     </div>
-    {% else %}
-    <p class="text-gray-500 text-center mt-12">ไม่พบอาหารที่ตรงกับเงื่อนไขการกรอง</p>
     {% endif %}
 </div>
 
-<!-- Modal -->
-<div id="loginModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">กรุณาเข้าสู่ระบบ</h2>
-        <p class="text-gray-600 mb-6">คุณต้องเข้าสู่ระบบเพื่อใช้งานฟังก์ชันนี้</p>
-        <a href="{% url 'login' %}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
-            เข้าสู่ระบบ
-        </a>
-        <a href="{% url 'register' %}" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105 ml-4">
-            สมัครสมาชิก
-        </a>
-    </div>
-</div>
-
-<!-- Select2 Scripts -->
+<!-- Select2 + Animation Scripts -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
@@ -115,11 +141,19 @@
         document.getElementById('loginModal').classList.add('hidden');
     }
 
-    // ทำให้ Select2 ทำงาน
+    // ใช้งาน Select2
     $(document).ready(function() {
         $('#category-select').select2({
             placeholder: "เลือกหมวดหมู่อาหาร",
             allowClear: true
+        });
+
+        // แสดงเอฟเฟกต์ตอนกดสุ่ม
+        $("#randomizeButton").on("click", function() {
+            $("#loading").removeClass("hidden");
+            setTimeout(() => {
+                $("#loading").addClass("hidden");
+            }, 1500); // ให้โหลด 1.5 วินาที
         });
     });
 </script>
