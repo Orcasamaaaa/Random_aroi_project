@@ -4,6 +4,8 @@ from core import views
 from django.conf import settings
 from django.conf.urls.static import static
 
+from core.views import app_to_pdf
+
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
     path('register/', views.register, name='register'),
@@ -39,7 +41,7 @@ urlpatterns = [
     path('restaurant/<int:restaurant_id>/add_food/', views.add_food, name='add_food'),  # เพิ่มเมนูอาหาร
     path('restaurant/<int:restaurant_id>/edit_food/<int:food_id>/', views.edit_food, name='edit_food'),  # แก้ไขเมนูอาหาร
     path('restaurant/<int:restaurant_id>/delete_food/<int:food_id>/', views.delete_food, name='delete_food'),
-    path('choose_food/<int:food_id>/', views.choose_food, name='choose_food'),# ลบเมนูอาหาร
+    path('choose_food/<int:food_id>/', views.choose_food, name='choose_food'),
     path('foods/', views.food_list, name='food_list'),  # เพิ่มบรรทัดนี้
 
     # กระทู้
@@ -74,7 +76,9 @@ urlpatterns = [
     path('superuser/delete-forum/<int:forum_id>/', views.admin_delete_forum, name='delete_forum'),  # ลบกระทู้
     path('recommend-food/', views.recommend_food, name='recommend_food'),
     path('food/<int:id>/', views.food_detail, name='food_detail'),
-
+    path('update-location/', views.update_location, name='update_location'),
+    path('export-code/<str:app_name>/', app_to_pdf, name='export_code'),
+    path('feedback-food/<int:food_id>/', views.feedback_food, name='feedback_food'),
 
 ]
 if settings.DEBUG:

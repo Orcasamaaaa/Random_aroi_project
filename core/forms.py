@@ -52,7 +52,7 @@ class RestaurantForm(forms.ModelForm):
         model = Restaurant
         fields = [
             'name', 'description', 'location', 'contact_info',
-            'opening_hours', 'social_media', 'images', 'categories'
+            'opening_hours', 'social_media', 'images', 'categories', 'latitude', 'longitude'
         ]
         widgets = {
             'categories': ModelSelect2MultipleWidget(
@@ -60,6 +60,8 @@ class RestaurantForm(forms.ModelForm):
                 search_fields=['name__icontains'],  # ทำให้สามารถค้นหาได้
                 attrs={'data-placeholder': 'เลือกประเภท...'},
             ),
+            'latitude': forms.NumberInput(attrs={'step': 'any', 'placeholder': 'กรุณากรอกละติจูด'}),
+            'longitude': forms.NumberInput(attrs={'step': 'any', 'placeholder': 'กรุณากรอกลองจิจูด'})
         }
 
 class RestaurantImageForm(forms.ModelForm):
@@ -113,6 +115,23 @@ class FoodFilterForm(forms.Form):
         label="ราคาสูงสุด",
         widget=forms.NumberInput(attrs={
             'step': '0.01',
+            'class': 'form-input',
+        }),
+    )
+    rating = forms.ChoiceField(
+        required=False,
+        label="คะแนนร้านอาหาร",
+        choices=[('', 'ทุกคะแนน'), ('5', '5 ดาว'), ('4', '4 ดาว'), ('3', '3 ดาว'), ('2', '2 ดาว'), ('1', '1 ดาว')],
+        widget=forms.Select(attrs={
+            'class': 'form-input',
+        }),
+    )
+    distance = forms.DecimalField(
+        required=False,
+        min_value=0,
+        label="ระยะทาง (กิโลเมตร)",
+        widget=forms.NumberInput(attrs={
+            'step': '0.1',
             'class': 'form-input',
         }),
     )

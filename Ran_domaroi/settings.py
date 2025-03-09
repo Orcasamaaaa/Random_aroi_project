@@ -114,3 +114,4 @@ EMAIL_HOST_PASSWORD = 'yvmz dmoj xwnn yggi'  # รหัสผ่านอีเ
 
 
 LOGIN_URL = '/login/'
+GEOIP_PATH = 'GeoLite2-City.mmdb'

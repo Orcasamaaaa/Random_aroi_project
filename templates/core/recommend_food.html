@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+
 {% block main %}
 <div class="container mx-auto py-12 px-6">
     <h1 class="text-4xl font-extrabold text-orange-600 text-center mb-8">🍽️ แนะนำอาหารสำหรับคุณ</h1>
@@ -46,6 +47,17 @@
                 <a href="{% url 'food_detail' food.id %}" class="mt-4 inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold transition-transform transform hover:scale-105">
                     ดูรายละเอียด
                 </a>
+
+                <!-- ฟอร์มสำหรับ Feedback -->
+                <form method="post" action="{% url 'feedback_food' food.id %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="like" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-transform transform hover:scale-110">
+                        👍 ชอบ
+                    </button>
+                    <button type="submit" name="action" value="dislike" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-transform transform hover:scale-110">
+                        👎 ไม่ชอบ
+                    </button>
+                </form>
             </div>
         </div>
         {% endfor %}

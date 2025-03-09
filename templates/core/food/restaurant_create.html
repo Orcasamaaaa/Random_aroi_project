@@ -88,6 +88,26 @@
         {% endif %}
       </div>
 
+      <!-- ฟิลด์ Latitude และ Longitude -->
+      <div class="mb-4">
+        <label for="latitude" class="block text-gray-700">ละติจูด (Latitude)</label>
+        <input type="text" id="latitude" name="latitude" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" readonly>
+        {% if form.latitude.errors %}
+        <p class="text-red-500 text-sm">{{ form.latitude.errors }}</p>
+        {% endif %}
+      </div>
+
+      <div class="mb-4">
+        <label for="longitude" class="block text-gray-700">ลองจิจูด (Longitude)</label>
+        <input type="text" id="longitude" name="longitude" class="form-control w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" readonly>
+        {% if form.longitude.errors %}
+        <p class="text-red-500 text-sm">{{ form.longitude.errors }}</p>
+        {% endif %}
+      </div>
+
+      <!-- แผนที่เลือกตำแหน่ง -->
+      <div id="map" style="height: 400px;"></div>
+
       <!-- Submit Button -->
       <div>
         <button type="submit" class="w-full py-3 px-6 bg-orange-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-orange-600 transition duration-300 ease-in-out transform hover:scale-105">
@@ -99,4 +119,53 @@
     <a href="{% url 'restaurant_list' %}" class="block text-center text-sm text-gray-500 hover:underline mt-4">กลับไปที่รายการร้านอาหาร</a>
   </div>
 </div>
+
+{% block scripts %}
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAGqxM8WkRYaiQkapiw9UpCFWIRxbzPbe4" async defer></script>
+
+<!-- Select2 Scripts -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script>
+    // Initialize Select2
+    $(document).ready(function() {
+        $('#categories').select2({
+            placeholder: "เลือกหมวดหมู่ร้านอาหาร",
+            allowClear: true
+        });
+    });
+
+    let map, marker;
+
+    function initMap() {
+        const initialLat =15.122547051274774; // Default Latitude
+        const initialLng = 104.90645103749809; // Default Longitude
+        const initialPosition = { lat: initialLat, lng: initialLng };
+
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: initialPosition,
+            zoom: 14,
+        });
+
+        marker = new google.maps.Marker({
+            position: initialPosition,
+            map: map,
+            draggable: true,
+        });
+
+        google.maps.event.addListener(marker, "dragend", function(event) {
+            document.getElementById("latitude").value = event.latLng.lat();
+            document.getElementById("longitude").value = event.latLng.lng();
+        });
+    }
+
+    // Initialize the map
+    document.addEventListener("DOMContentLoaded", function() {
+        initMap();
+    });
+</script>
+{% endblock %}
 {% endblock %}

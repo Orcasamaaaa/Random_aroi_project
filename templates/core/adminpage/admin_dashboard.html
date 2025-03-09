@@ -14,29 +14,45 @@
         </ul>
     </div>
 </div>
-     <div id="chart"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script>
-        var options = {
-            chart: {
-                type: 'bar'
-            },
-            series: [{
-                name: 'จำนวน',
-                data: [
-                    {{ total_users }},
-                    {{ total_restaurants }},
-                    {{ total_forums }}
-                ]
-            }],
-            xaxis: {
-                categories: ['ผู้ใช้', 'ร้านอาหาร', 'กระทู้']
-            }
-        };
+<!-- ✅ แสดงกราฟแท่งเดิม -->
+<div id="chart"></div>
 
-        var chart = new ApexCharts(document.querySelector("#chart"), options);
-        chart.render();
-    </script>
-</div>
+<!-- ✅ แสดงกราฟ Feedback (Pie Chart) -->
+<div id="feedbackChart" class="mt-8"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    // ✅ กราฟแท่ง (เดิม)
+    var options = {
+        chart: {
+            type: 'bar'
+        },
+        series: [{
+            name: 'จำนวน',
+            data: [
+                {{ total_users }},
+                {{ total_restaurants }},
+                {{ total_forums }}
+            ]
+        }],
+        xaxis: {
+            categories: ['ผู้ใช้', 'ร้านอาหาร', 'กระทู้']
+        }
+    };
+    var chart = new ApexCharts(document.querySelector("#chart"), options);
+    chart.render();
+
+    // ✅ กราฟวงกลม (Pie Chart) สำหรับ Feedback
+    var feedbackOptions = {
+        chart: {
+            type: 'pie'
+        },
+        series: [{{ total_likes }}, {{ total_dislikes }}],
+        labels: ['ชอบ (👍)', 'ไม่ชอบ (👎)'],
+        colors: ['#28a745', '#dc3545']
+    };
+    var feedbackChart = new ApexCharts(document.querySelector("#feedbackChart"), feedbackOptions);
+    feedbackChart.render();
+</script>
 {% endblock %}

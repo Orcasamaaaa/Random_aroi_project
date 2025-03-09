@@ -7,6 +7,8 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_http_methods
 import re
 
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 
 from .forms import *
@@ -30,7 +32,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse
 from django.core.paginator import Paginator
 from sklearn.ensemble import RandomForestClassifier
-
+from geopy.distance import distance
+import json
+from geopy.distance import geodesic
 # หน้าแรก
 def home(request):
     # จำกัดจำนวนรายการเป็น 6 รายการแรกในแต่ละประเภท
@@ -80,6 +84,11 @@ def profile_view(request):
     })
 
 
+def calculate_distance(user_lat, user_lon, restaurant_lat, restaurant_lon):
+    user_location = (user_lat, user_lon)
+    restaurant_location = (restaurant_lat, restaurant_lon)
+    # คำนวณระยะทางระหว่างผู้ใช้และร้านอาหาร (ระยะทางเป็นกิโลเมตร)
+    return distance(user_location, restaurant_location).km
 
 # แก้ไขโปรไฟล์
 @login_required
@@ -97,54 +106,22 @@ def profile_edit(request):
 
 # ฟังก์ชันสำหรับสุ่มอาหาร
 
-
 def random_food(request):
     form = FoodFilterForm(request.GET or None)
-    food = None  # ค่าเริ่มต้นของอาหารที่สุ่มได้
-    avg_rating = None  # ค่าเริ่มต้นของคะแนนเฉลี่ยร้านอาหาร
-    foods = Food.objects.all().select_related('restaurant')  # ดึงอาหารทั้งหมดก่อนกรอง
+    food = None
+    avg_rating = None
 
-    # ตรวจสอบว่ามีการส่งค่า GET และ form ถูกต้อง
-    if request.GET and form.is_valid():
-        category = form.cleaned_data.get('category')
-        min_price = form.cleaned_data.get('min_price')
-        max_price = form.cleaned_data.get('max_price')
+    # ตรวจสอบการล็อกอิน
+    if request.user.is_authenticated:
+        user_lat = request.user.profile.latitude
+        user_lon = request.user.profile.longitude
+    else:
+        user_lat = None
+        user_lon = None
 
-        if category:
-            foods = foods.filter(category__in=category)
+    foods = Food.objects.all().select_related('restaurant')
 
-            # ถ้าเลือกหมวดหมู่แล้ว ไม่มีอาหารในหมวดหมู่นั้นเลย → แจ้งเตือน
-            if not foods.exists():
-                messages.warning(request, "ไม่มีอาหารในหมวดหมู่นี้")
-                return render(request, 'core/random_food.html', {'food': None, 'form': form})
-
-        # กรองช่วงราคาถ้ามีค่า
-        if min_price:
-            foods = foods.filter(price__gte=min_price)
-        if max_price:
-            foods = foods.filter(price__lte=max_price)
-
-        # ถ้าไม่มีอาหารที่ตรงตามช่วงราคา → หาตัวที่ใกล้เคียงที่สุด
-        if not foods.exists() and (min_price or max_price):
-            closest_food = Food.objects.order_by('price').first()
-            if closest_food:
-                food = closest_food
-                messages.warning(request, f"ไม่มีอาหารในช่วงราคาที่เลือก แสดงอาหารที่ใกล้เคียงที่สุด: {food.name}")
-            else:
-                messages.warning(request, "ไม่มีอาหารที่ตรงกับเงื่อนไข")
-                return render(request, 'core/random_food.html', {'food': None, 'form': form})
-
-        # สุ่มอาหารจากที่กรองได้
-        if foods.exists():
-            food = random.choice(list(foods))
-            request.session['selected_food_id'] = food.id  # เก็บ ID อาหารที่สุ่มได้
-
-        # คำนวณคะแนนเฉลี่ยของร้านที่สุ่มได้
-        if food:
-            avg_rating = Review.objects.filter(restaurant=food.restaurant).aggregate(Avg('rating'))['rating__avg']
-            avg_rating = round(avg_rating, 1) if avg_rating else None  # ปัดเศษเหลือ 1 ตำแหน่ง
-
-    # ตรวจสอบว่ามีการกด Like/Dislike หรือไม่
+    # ✅ ตรวจสอบการกด Like/Dislike
     if request.method == 'POST':
         if not request.user.is_authenticated:
             messages.error(request, "กรุณาเข้าสู่ระบบก่อน")
@@ -156,38 +133,183 @@ def random_food(request):
             action = request.POST.get('action')
             liked_status = action == 'like'
 
-            LikeDislikeFood.objects.create(
-                user=request.user,
-                food=food,
-                liked=liked_status,
-                timestamp=timezone.now()
+            # ตรวจสอบว่าเคยให้ feedback นี้หรือยัง
+            existing_entry, created = LikeDislikeFood.objects.get_or_create(
+                user=request.user, food=food,
+                defaults={'liked': liked_status, 'timestamp': timezone.now()}
             )
+
+            if not created:
+                existing_entry.liked = liked_status  # อัปเดตค่า feedback
+                existing_entry.timestamp = timezone.now()
+                existing_entry.save()
+
             messages.success(request, f"คุณ{'ชอบ' if liked_status else 'ไม่ชอบ'}อาหาร {food.name} แล้ว!")
             return redirect(request.path)
         except Food.DoesNotExist:
             messages.error(request, "ไม่พบอาหารที่คุณเลือก กรุณาลองใหม่")
+            return redirect(request.path)
+
+    # ✅ ตรวจสอบค่าที่รับมาจากฟอร์ม
+    if request.GET and form.is_valid():
+        category = form.cleaned_data.get('category')
+        min_price = form.cleaned_data.get('min_price')
+        max_price = form.cleaned_data.get('max_price')
+        rating = form.cleaned_data.get('rating')
+        distance = form.cleaned_data.get('distance')
+
+        print("🚀 Request GET:", request.GET)
+        print("📌 All Foods Before Filtering:", list(foods.values('name', 'price', 'restaurant__name')))
+
+        # ✅ กรองอาหารที่ถูก Dislike โดยผู้ใช้
+        if request.user.is_authenticated:  # เพิ่มการเช็คว่าเป็นผู้ใช้ที่ล็อกอินหรือไม่
+            disliked_foods = LikeDislikeFood.objects.filter(user=request.user, liked=False).values_list('food_id', flat=True)
+            foods = foods.exclude(id__in=disliked_foods)
+            print("🚫 Foods After Removing Disliked:", list(foods.values('name')))
+
+        # ✅ กรองตามหมวดหมู่
+        if category:
+            foods = foods.filter(category__in=category)
+            print("✅ Foods After Category Filter:", list(foods.values('name', 'category__name')))
+
+        # ❌ แจ้งเตือนหากไม่มีอาหารในหมวดหมู่ที่เลือก
+        if not foods.exists():
+            messages.warning(request, "ไม่มีอาหารในหมวดหมู่นี้")
+            return render(request, 'core/random_food.html', {'food': None, 'form': form})
+
+        # ✅ กรองช่วงราคา
+        if min_price:
+            foods = foods.filter(price__gte=min_price)
+        if max_price:
+            foods = foods.filter(price__lte=max_price)
+        print("💰 Foods After Price Filter:", list(foods.values('name', 'price')))
+
+        # ✅ กรองตามคะแนนร้านอาหาร
+        foods = foods.annotate(average_rating=Avg('restaurant__review__rating'))
+        if rating:
+            foods = foods.filter(average_rating__gte=rating)
+        print("⭐ Foods After Rating Filter:", list(foods.values('name', 'average_rating')))
+
+        # ✅ กรองร้านที่มีพิกัดเท่านั้น
+        foods_with_lat_lon = foods.filter(restaurant__latitude__isnull=False, restaurant__longitude__isnull=False)
+        print("📍 Foods with lat/lon:", list(foods_with_lat_lon.values('name', 'restaurant__latitude', 'restaurant__longitude')))
+
+        # ❌ ถ้าไม่มีพิกัด ให้แจ้งเตือนและลองใช้ Fallback
+        if not foods_with_lat_lon.exists():
+            messages.warning(request, "ไม่มีร้านที่มีพิกัดบนแผนที่")
+            print("⚠️ ไม่มีร้านที่มีพิกัดเลย ใช้ค่าพิกัดผู้ใช้เป็น fallback")
+            return render(request, 'core/random_food.html', {'food': None, 'form': form})
+
+        # ✅ กรองตามระยะทาง
+        filtered_foods = []
+        if distance:
+            for food in foods_with_lat_lon:
+                restaurant_location = (food.restaurant.latitude, food.restaurant.longitude)
+                user_location = (user_lat, user_lon) if user_lat and user_lon else (0, 0)  # ป้องกันกรณีไม่มีพิกัดผู้ใช้
+                distance_to_restaurant = geodesic(user_location, restaurant_location).kilometers
+                print(f"🛣️ Distance to {food.name}: {distance_to_restaurant} km")
+                if distance_to_restaurant <= float(distance):
+                    filtered_foods.append(food)
+
+            foods = Food.objects.filter(id__in=[food.id for food in filtered_foods])
+        print("✅ Foods After Distance Filter:", list(foods.values('name')))
+
+        # ❌ แจ้งเตือนหากไม่มีอาหารที่ตรงกับเงื่อนไข
+        if not foods.exists():
+            messages.warning(request, "ไม่มีอาหารที่ตรงกับเงื่อนไขการกรอง")
+            return render(request, 'core/random_food.html', {'food': None, 'form': form})
+
+        # ✅ สุ่มอาหารจากที่กรองแล้ว
+        if foods.exists():
+            food = random.choice(list(foods))
+            print("🎲 Random food selected:", food.name)
+
+        # ✅ คำนวณคะแนนเฉลี่ยของร้านที่สุ่มได้
+        if food:
+            avg_rating = Review.objects.filter(restaurant=food.restaurant).aggregate(Avg('rating'))['rating__avg']
+            avg_rating = round(avg_rating, 1) if avg_rating else None
+
+        # ✅ คำนวณระยะทางของร้านที่สุ่มได้
+        if food and food.restaurant.latitude and food.restaurant.longitude:
+            restaurant_location = (food.restaurant.latitude, food.restaurant.longitude)
+            user_location = (user_lat, user_lon)
+            food.restaurant.distance = geodesic(user_location, restaurant_location).kilometers
+        else:
+            food.restaurant.distance = None
 
     return render(request, 'core/random_food.html', {
         'food': food,
         'form': form,
-        'avg_rating': avg_rating if food else None,  # ส่งคะแนนเฉลี่ยไปที่ template
+        'avg_rating': avg_rating if food else None,
+        'distance': food.restaurant.distance if food and food.restaurant.distance else None,
     })
+
 @login_required
 def choose_food(request, food_id):
     food = get_object_or_404(Food, id=food_id)
-
     # สร้าง ChosenFood สำหรับผู้ใช้คนปัจจุบัน
     LikeDislikeFood.objects.create(user=request.user, food=food)
-
     return redirect('home')
 
 # รายการร้านอาหาร
 def restaurant_list(request):
-    restaurants = Restaurant.objects.all()  # ดึงข้อมูลร้านอาหารทั้งหมด
-    return render(request, 'core/food/restaurant_list.html', {'restaurants': restaurants})
+    search_query = request.GET.get('search', '')
+    rating_filter = request.GET.get('rating', '')
+    distance_filter = request.GET.get('distance', '')
+    category_filter = request.GET.get('category', '')
 
+    # ดึงข้อมูลร้านอาหารทั้งหมด
+    restaurants = Restaurant.objects.all()
 
-# รายละเอียดร้านอาหาร
+    # การค้นหาตามชื่อและคำอธิบายร้าน
+    if search_query:
+        restaurants = restaurants.filter(
+            Q(name__icontains=search_query) | Q(description__icontains=search_query)
+        )
+
+    # การกรองตามประเภทของร้านอาหาร
+    if category_filter:
+        restaurants = restaurants.filter(categories__id=category_filter)
+
+    # ตรวจสอบการล็อกอินและดึงพิกัดของผู้ใช้
+    if request.user.is_authenticated:
+        user_lat = request.user.profile.latitude
+        user_lon = request.user.profile.longitude
+    else:
+        user_lat = None
+        user_lon = None
+
+    # คำนวณระยะทางและเพิ่มฟิลด์ distance ให้แต่ละร้าน
+    restaurant_list_with_ratings = []
+    for restaurant in restaurants:
+        # คำนวณคะแนนเฉลี่ยดาว
+        average_rating = Review.objects.filter(restaurant=restaurant).aggregate(Avg('rating'))['rating__avg']
+        restaurant.average_rating = average_rating if average_rating else 0  # กำหนดให้เป็น 0 ถ้าคะแนนเฉลี่ยไม่เป็นที่ต้องการ
+
+        # ตรวจสอบว่าร้านมีพิกัด latitude, longitude หรือไม่
+        if restaurant.latitude and restaurant.longitude and user_lat and user_lon:
+            # คำนวณระยะทางจากพิกัดของร้านและผู้ใช้
+            restaurant_location = (restaurant.latitude, restaurant.longitude)
+            user_location = (user_lat, user_lon)
+            distance = geodesic(user_location, restaurant_location).kilometers
+            restaurant.distance = distance  # เพิ่มระยะทางเข้าไปในร้าน
+        else:
+            restaurant.distance = None  # ถ้าไม่มีพิกัดให้ระยะทางเป็น None
+
+        restaurant_list_with_ratings.append(restaurant)
+
+    # การกรองตามคะแนนเฉลี่ย
+    if rating_filter:
+        restaurant_list_with_ratings = [restaurant for restaurant in restaurant_list_with_ratings if restaurant.average_rating >= float(rating_filter)]
+
+    # การกรองตามระยะทาง
+    if distance_filter:
+        restaurant_list_with_ratings = [restaurant for restaurant in restaurant_list_with_ratings if restaurant.distance and restaurant.distance <= float(distance_filter)]
+
+    return render(request, 'core/food/restaurant_list.html', {
+        'restaurants': restaurant_list_with_ratings,
+        'categories': RestaurantCategory.objects.all(),  # ส่งรายการประเภทร้านอาหาร
+    })
 
 def restaurant_detail(request, id):
     restaurant = get_object_or_404(Restaurant, id=id)
@@ -402,8 +524,71 @@ def delete_food(request, restaurant_id, food_id):
 
     return redirect('restaurant_detail', id=restaurant_id)
 def food_list(request):
-    foods = Food.objects.all()  # ดึงข้อมูลอาหารทั้งหมด
-    return render(request, 'core/food/food_list.html', {'foods': foods})
+    search_query = request.GET.get('search', '')  # ค้นหาชื่ออาหาร
+    category_filter = request.GET.getlist('category')  # รับค่าหมวดหมู่จาก select2 ที่เลือกหลายค่า
+    rating_filter = request.GET.get('rating', '')  # กรองคะแนน
+    distance_filter = request.GET.get('distance', '')  # กรองระยะทาง
+    min_price = request.GET.get('min_price', '')  # รับค่าราคาต่ำสุด
+    max_price = request.GET.get('max_price', '')  # รับค่าราคาสูงสุด
+
+    # ดึงข้อมูลอาหารทั้งหมด
+    foods = Food.objects.all()
+
+    # ค้นหาตามชื่ออาหาร
+    if search_query:
+        foods = foods.filter(name__icontains=search_query)
+
+    # กรองตามหมวดหมู่
+    if category_filter:
+        foods = foods.filter(category__id__in=category_filter)  # ใช้ __id__in เพื่อกรองหลายหมวดหมู่
+
+    # กรองตามราคาต่ำสุดและสูงสุด
+    if min_price:
+        foods = foods.filter(price__gte=min_price)  # กรองอาหารที่ราคามากกว่าหรือเท่ากับราคาต่ำสุด
+    if max_price:
+        foods = foods.filter(price__lte=max_price)  # กรองอาหารที่ราคาน้อยกว่าหรือเท่ากับราคาสูงสุด
+
+    # ดึงพิกัดของผู้ใช้ (ต้องมีในโปรไฟล์ของผู้ใช้)
+    if request.user.is_authenticated:
+        user_lat = request.user.profile.latitude
+        user_lon = request.user.profile.longitude
+    else:
+        user_lat = None
+        user_lon = None
+
+    food_list_with_ratings = []
+    for food in foods:
+        # คำนวณคะแนนเฉลี่ยดาวของร้านอาหาร
+        average_rating = Review.objects.filter(restaurant=food.restaurant).aggregate(Avg('rating'))['rating__avg']
+        food.restaurant.average_rating = average_rating if average_rating else 0  # กำหนดให้เป็น 0 ถ้าคะแนนเฉลี่ยไม่เป็นที่ต้องการ
+
+        # ตรวจสอบว่าร้านมีพิกัด latitude, longitude หรือไม่
+        if food.restaurant.latitude and food.restaurant.longitude:
+            # คำนวณระยะทางจากพิกัดของร้านและผู้ใช้
+            restaurant_location = (food.restaurant.latitude, food.restaurant.longitude)
+            user_location = (user_lat, user_lon)
+            distance = geodesic(user_location, restaurant_location).kilometers
+            food.restaurant.distance = distance  # เพิ่มระยะทางเข้าไปในร้าน
+        else:
+            food.restaurant.distance = None  # ถ้าไม่มีพิกัดให้ระยะทางเป็น None
+
+        food_list_with_ratings.append(food)
+
+    # การกรองตามคะแนนเฉลี่ย
+    if rating_filter:
+        food_list_with_ratings = [food for food in food_list_with_ratings if food.restaurant.average_rating >= float(rating_filter)]
+
+    # การกรองตามระยะทาง
+    if distance_filter:
+        food_list_with_ratings = [food for food in food_list_with_ratings if food.restaurant.distance and food.restaurant.distance <= float(distance_filter)]
+
+    # ส่งข้อมูลไปยังเทมเพลต
+    return render(request, 'core/food/food_list.html', {
+        'foods': food_list_with_ratings,
+        'categories': Category.objects.all(),  # ส่งหมวดหมู่ทั้งหมดไปยังเทมเพลต
+    })
+
+
 # ฟอรัม (กระทู้)
 def forum_list(request):
     forums = Forum.objects.all().order_by('-created_at')  # ดึงข้อมูลเรียงตามวันที่สร้าง
@@ -425,7 +610,6 @@ def create_forum(request):
     return render(request, 'core/community/create_forum.html', {'form': form})
 
 
-@login_required
 def forum_detail(request, forum_id):
     """แสดงกระทู้และความคิดเห็น"""
     forum = get_object_or_404(Forum, id=forum_id)
@@ -664,20 +848,20 @@ def toggle_save_forum(request, forum_id):
 @login_required
 def admin_dashboard(request):
     if request.user.is_superuser:  # ตรวจสอบว่า user เป็น superuser หรือไม่
-        # ดึงข้อมูลจำนวนผู้ใช้ทั้งหมดในระบบ
         total_users = User.objects.count()
-
-        # ดึงข้อมูลจำนวนร้านอาหารทั้งหมดในระบบ
         total_restaurants = Restaurant.objects.count()
-
-        # ดึงข้อมูลจำนวนกระทู้ทั้งหมดในระบบ
         total_forums = Forum.objects.count()
 
-        # ส่งข้อมูลไปที่ Template
+        # ✅ ดึงข้อมูล Feedback เฉพาะจากหน้าแนะนำ (recommend)
+        total_likes = LikeDislikeFood.objects.filter(liked=True, source="recommend").count()
+        total_dislikes = LikeDislikeFood.objects.filter(liked=False, source="recommend").count()
+
         return render(request, 'core/adminpage/admin_dashboard.html', {
             'total_users': total_users,
             'total_restaurants': total_restaurants,
-            'total_forums': total_forums
+            'total_forums': total_forums,
+            'total_likes': total_likes,
+            'total_dislikes': total_dislikes
         })
     else:
         return render(request, 'core/adminpage/access_denied.html')  # หากไม่ใช่ superuser แสดงหน้าไม่อนุญาต
@@ -859,51 +1043,69 @@ def food_detail(request, id):
 @login_required
 def recommend_food(request):
     user = request.user
-    liked_foods = LikeDislikeFood.objects.filter(user=user)  # ดึงข้อมูลอาหารที่เคยชอบ/ไม่ชอบ
+    liked_foods = LikeDislikeFood.objects.filter(user=user)
 
     if not liked_foods.exists():
         messages.warning(request, "คุณยังไม่มีข้อมูลการชอบ/ไม่ชอบอาหาร กรุณาให้คะแนนอาหารก่อน!")
         return render(request, 'core/recommend_food.html', {'recommendations': []})
 
-    # 🔹 1. เตรียมข้อมูล Feature ของอาหาร
     foods = Food.objects.all()
-    food_data = []
-    food_labels = []
-    food_ids = []
-    category_list = set()  # เก็บหมวดหมู่ทั้งหมดสำหรับ One-Hot Encoding
+    food_data, food_labels, food_ids = [], [], []
+    category_list = set()
 
     for log in liked_foods:
         food = log.food
         category_names = [c.name for c in food.category.all()]
-        category_list.update(category_names)  # เพิ่มชื่อหมวดหมู่เข้าเซ็ต
-        food_data.append([food.price, *category_names])
-        food_labels.append(1 if log.liked else 0)  # 1 = ชอบ, 0 = ไม่ชอบ
+        category_list.update(category_names)
+
+        # ✅ คำนวณระยะทางระหว่างผู้ใช้กับร้านอาหาร
+        if food.restaurant.latitude and food.restaurant.longitude:
+            user_location = (user.profile.latitude, user.profile.longitude)
+            restaurant_location = (food.restaurant.latitude, food.restaurant.longitude)
+            distance = geodesic(user_location, restaurant_location).kilometers
+        else:
+            distance = 100  # ✅ ถ้าไม่มีพิกัด ให้กำหนดค่า Default 100 กม.
+
+        # ✅ ใช้ aggregate() เพื่อดึงคะแนนเฉลี่ยของร้าน
+        avg_rating = Review.objects.filter(restaurant=food.restaurant).aggregate(Avg('rating'))['rating__avg']
+        avg_rating = avg_rating if avg_rating else 0  # ✅ ถ้ายังไม่มีรีวิว ให้กำหนดค่าเป็น 0
+
+        food_data.append([food.price, distance, avg_rating, *category_names])
+        food_labels.append(1 if log.liked else 0)
         food_ids.append(food.id)
 
-    if len(food_data) < 5:  # ข้อมูลน้อยเกินไป
+    if len(food_data) < 5:
         messages.warning(request, "ข้อมูลที่เคยให้คะแนนมีน้อยเกินไป แนะนำให้ให้คะแนนอาหารเพิ่มก่อน!")
         return render(request, 'core/recommend_food.html', {'recommendations': []})
 
-    # 🔹 2. ใช้ One-Hot Encoding กับหมวดหมู่อาหาร
-    encoder = OneHotEncoder(handle_unknown='ignore')  # ✅ แก้ไขตรงนี้!
+    # ✅ One-Hot Encoding หมวดหมู่อาหาร
+    encoder = OneHotEncoder(handle_unknown='ignore')
     category_array = np.array(list(category_list)).reshape(-1, 1)
-    encoder.fit(category_array)  # Fit ด้วยค่าหมวดหมู่ที่รู้จัก
+    encoder.fit(category_array)
 
     transformed_data = []
     for food in food_data:
-        price = food[0]
-        category_vector = encoder.transform(np.array(food[1:]).reshape(-1, 1)).toarray().sum(axis=0)  # One-Hot
-        transformed_data.append([price] + list(category_vector))
+        price, distance, avg_rating = food[:3]
+        category_vector = encoder.transform(np.array(food[3:]).reshape(-1, 1)).toarray().sum(axis=0)
+        transformed_data.append([price, distance, avg_rating] + list(category_vector))
 
-    # 🔹 3. ใช้ MinMaxScaler เพื่อให้ค่าราคาอยู่ในช่วง 0-1
+    # ✅ Train-Test Split
     scaler = MinMaxScaler()
     scaled_data = scaler.fit_transform(transformed_data)
+    X_train, X_test, y_train, y_test = train_test_split(scaled_data, food_labels, test_size=0.2, random_state=42)
 
-    # 🔹 4. เทรนโมเดล RandomForest
+    # ✅ เทรนโมเดล RandomForest
     clf = RandomForestClassifier(n_estimators=100, random_state=42)
-    clf.fit(scaled_data, food_labels)
+    clf.fit(X_train, y_train)
 
-    # 🔹 5. คัดกรองอาหารที่ยังไม่เคยถูกให้คะแนน
+    # ✅ ทำนายค่าใน Test Set
+    y_pred = clf.predict(X_test)
+
+    # ✅ คำนวณ Accuracy
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"🎯 Accuracy ของโมเดล: {accuracy:.4f}")
+
+    # ✅ คัดกรองอาหารที่ยังไม่เคยถูกให้คะแนน
     unseen_foods = foods.exclude(id__in=food_ids)
     if not unseen_foods.exists():
         messages.warning(request, "ไม่มีอาหารที่ยังไม่ได้ให้คะแนน")
@@ -914,17 +1116,109 @@ def recommend_food(request):
 
     for food in unseen_foods:
         category_names = [c.name for c in food.category.all()]
-        category_vector = encoder.transform(np.array(category_names).reshape(-1, 1)).toarray().sum(axis=0)  # One-Hot
-        unseen_data.append([food.price] + list(category_vector))
+
+        # ✅ คำนวณระยะทาง
+        if food.restaurant.latitude and food.restaurant.longitude:
+            user_location = (user.profile.latitude, user.profile.longitude)
+            restaurant_location = (food.restaurant.latitude, food.restaurant.longitude)
+            distance = geodesic(user_location, restaurant_location).kilometers
+        else:
+            distance = 100  # ✅ ใช้ค่า Default ถ้าไม่มีพิกัด
+
+        # ✅ ใช้ aggregate() เพื่อดึงคะแนนเฉลี่ยของร้าน
+        avg_rating = Review.objects.filter(restaurant=food.restaurant).aggregate(Avg('rating'))['rating__avg']
+        avg_rating = avg_rating if avg_rating else 0  # ✅ กำหนดค่า Default
+
+        category_vector = encoder.transform(np.array(category_names).reshape(-1, 1)).toarray().sum(axis=0)
+        unseen_data.append([food.price, distance, avg_rating] + list(category_vector))
         unseen_food_list.append(food)
 
-    scaled_unseen_data = scaler.transform(unseen_data)  # Normalize ข้อมูลใหม่
+    scaled_unseen_data = scaler.transform(unseen_data)
 
-    # 🔹 6. ใช้โมเดลคาดเดา และเลือกอาหารที่โมเดลคิดว่าผู้ใช้น่าจะชอบ
-    predictions = clf.predict_proba(scaled_unseen_data)[:, 1]  # ใช้ค่าความน่าจะเป็นของการ "ชอบ"
-    sorted_indices = np.argsort(predictions)[::-1]  # เรียงจากค่าความน่าจะเป็นสูงสุด
-    recommended_foods = [unseen_food_list[i] for i in sorted_indices[:5]]  # แนะนำ 5 อันดับแรก
+    # ✅ ใช้โมเดลทำนาย
+    predictions = clf.predict_proba(scaled_unseen_data)[:, 1]
+    sorted_indices = np.argsort(predictions)[::-1]
+    recommended_foods = [unseen_food_list[i] for i in sorted_indices[:5]]
 
     return render(request, 'core/recommend_food.html', {
         'recommendations': recommended_foods
     })
+
+@login_required
+def feedback_food(request, food_id):
+    user = request.user
+    try:
+        food = Food.objects.get(id=food_id)
+
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            liked_status = action == 'like'
+
+            # ✅ บันทึก Feedback เฉพาะจากหน้า Recommend
+            existing_entry = LikeDislikeFood.objects.filter(user=user, food=food, source='recommend').first()
+            if existing_entry:
+                existing_entry.liked = liked_status
+                existing_entry.save()
+            else:
+                LikeDislikeFood.objects.create(user=user, food=food, liked=liked_status, source='recommend')
+
+            messages.success(request, f"คุณ{'ชอบ' if liked_status else 'ไม่ชอบ'}อาหาร {food.name} แล้ว!")
+            return redirect('recommend_food')  # ✅ กลับไปที่หน้าแนะนำอาหาร
+
+    except Food.DoesNotExist:
+        messages.error(request, "ไม่พบอาหารที่เลือก กรุณาลองใหม่")
+        return redirect('recommend_food')
+
+
+@login_required
+def update_location(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+
+        # อัปเดตข้อมูลตำแหน่งใน Profile
+        profile = Profile.objects.get(user=request.user)
+        profile.latitude = latitude
+        profile.longitude = longitude
+        profile.save()
+
+        return JsonResponse({'status': 'success'}, status=200)
+
+    return JsonResponse({'status': 'failed'}, status=400)
+
+
+
+import os
+import pdfkit
+from django.http import HttpResponse
+from django.conf import settings
+
+# กำหนด path ของ wkhtmltopdf (Windows ใช้ path นี้, Linux/Mac อาจไม่ต้อง)
+PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe")
+
+def app_to_pdf(request, app_name):
+    app_path = os.path.join(settings.BASE_DIR, app_name)
+    pdf_filename = f"{app_name}.pdf"
+
+    if not os.path.exists(app_path):
+        return HttpResponse("App not found", status=404)
+
+    html_content = f"<h1>Source Code of App: {app_name}</h1>"
+
+    for root, dirs, files in os.walk(app_path):
+        for file in files:
+            if file.endswith((".py", ".html", ".css", ".js")):  # แปลงเฉพาะไฟล์ที่ต้องการ
+                file_path = os.path.join(root, file)
+                with open(file_path, "r", encoding="utf-8") as f:  # ✅ อ่านไฟล์เป็น UTF-8
+                    html_content += f"<h2>{file}</h2><pre>{f.read()}</pre>"
+
+    # ✅ ใช้ pdfkit พร้อมกำหนดให้ใช้ encoding UTF-8
+    options = {'encoding': 'UTF-8'}
+    pdfkit.from_string(html_content, pdf_filename, configuration=PDFKIT_CONFIG, options=options)
+
+    with open(pdf_filename, "rb") as pdf:
+        response = HttpResponse(pdf.read(), content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{pdf_filename}"'
+        return response
+

@@ -9,19 +9,19 @@
             {% csrf_token %}
             <!-- รูปโปรไฟล์ร้าน -->
             <div class="text-center">
-    <label class="block text-gray-700 font-semibold mb-2">รูปโปรไฟล์ร้าน (ปัจจุบัน)</label>
-    {% if restaurant.images %}
-        <img src="{{ restaurant.images.url }}" alt="โปรไฟล์ร้าน" id="currentProfilePic"
-             class="w-32 h-32 object-cover rounded-full shadow-lg mx-auto">
-    {% else %}
-        <div class="bg-gray-300 w-32 h-32 rounded-full flex items-center justify-center text-gray-500 shadow-lg mx-auto">
-            ไม่มีรูปภาพ
-        </div>
-    {% endif %}
-</div>
+                <label class="block text-gray-700 font-semibold mb-2">รูปโปรไฟล์ร้าน (ปัจจุบัน)</label>
+                {% if restaurant.images %}
+                    <img src="{{ restaurant.images.url }}" alt="โปรไฟล์ร้าน" id="currentProfilePic"
+                         class="w-32 h-32 object-cover rounded-full shadow-lg mx-auto">
+                {% else %}
+                    <div class="bg-gray-300 w-32 h-32 rounded-full flex items-center justify-center text-gray-500 shadow-lg mx-auto">
+                        ไม่มีรูปภาพ
+                    </div>
+                {% endif %}
+            </div>
 
             <!-- อัพโหลดรูปใหม่ -->
-           <div class="text-center mt-6">
+            <div class="text-center mt-6">
                 <label class="block text-gray-700 font-semibold mb-2">อัพโหลดรูปโปรไฟล์ร้านใหม่</label>
                 <input type="file" name="images" id="profileImageInput" class="w-full md:w-1/2 border border-gray-300 rounded-lg p-2 mx-auto">
                 <!-- พรีวิวรูปภาพใหม่ที่กำลังจะอัปโหลด -->
@@ -75,12 +75,30 @@
                            placeholder="ลิงก์ Social Media (ถ้ามี)"
                            value="{{ form.social_media.value|default_if_none:'' }}">
                 </div>
+
+                <!-- เพิ่มฟิลด์ Latitude และ Longitude -->
+                <div class="col-span-2">
+                    <label class="block text-gray-700 font-semibold mb-2">ละติจูด (Latitude)</label>
+                    {{ form.latitude }}
+                </div>
+
+                <div class="col-span-2">
+                    <label class="block text-gray-700 font-semibold mb-2">ลองจิจูด (Longitude)</label>
+                    {{ form.longitude }}
+                </div>
+
+                <!-- เพิ่มแผนที่เพื่อปักหมุดตำแหน่ง -->
+                <div class="col-span-2">
+                    <label class="block text-gray-700 font-semibold mb-2">เลือกตำแหน่งร้านบนแผนที่</label>
+                    <div id="map" style="height: 400px;"></div>
+                </div>
             </div>
-        <div class="text-center mt-8">
-    <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg">
-        บันทึกข้อมูล
-    </button>
-    </div>
+
+            <div class="text-center mt-8">
+                <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg">
+                    บันทึกข้อมูล
+                </button>
+            </div>
 
         </form>
 
@@ -106,17 +124,20 @@
             <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
                 ยกเลิก
             </button>
-           <form method="post" action="{% url 'delete_restaurant' restaurant.id %}">
-    {% csrf_token %}
-    <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-        ยืนยันลบ
-    </button>
-</form>
+            <form method="post" action="{% url 'delete_restaurant' restaurant.id %}">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                    ยืนยันลบ
+                </button>
+            </form>
         </div>
     </div>
 </div>
 
 {% block scripts %}
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAGqxM8WkRYaiQkapiw9UpCFWIRxbzPbe4" async defer></script>
+
 <!-- Select2 Scripts -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -132,7 +153,7 @@
     }
 
     // File upload preview
-     document.getElementById('profileImageInput').addEventListener('change', function(event) {
+    document.getElementById('profileImageInput').addEventListener('change', function(event) {
         const preview = document.getElementById('profileImagePreview');
         const file = event.target.files[0];
         const reader = new FileReader();
@@ -153,6 +174,36 @@
             placeholder: "เลือกหมวดหมู่ร้านอาหาร",
             allowClear: true
         });
+    });
+
+    // Google Maps Initialization
+    let map, marker;
+
+    function initMap() {
+        const lat = {{ form.latitude.value|default:15.122547051274774 }};
+        const lng = {{ form.longitude.value|default:104.90645103749809 }};
+        const initialPosition = { lat: lat, lng: lng };
+
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: initialPosition,
+            zoom: 14,
+        });
+
+        marker = new google.maps.Marker({
+            position: initialPosition,
+            map: map,
+            draggable: true,
+        });
+
+        google.maps.event.addListener(marker, "dragend", function(event) {
+            document.getElementById("id_latitude").value = event.latLng.lat();
+            document.getElementById("id_longitude").value = event.latLng.lng();
+        });
+    }
+
+    // Load Google Map once page is ready
+    document.addEventListener("DOMContentLoaded", function() {
+        initMap();
     });
 </script>
 {% endblock %}
