@@ -31,8 +31,8 @@
         </div>
         <!-- Actions -->
         <div class="flex justify-end space-x-4">
-            <a href="{% url 'restaurant_detail' restaurant.id %}"
-               class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300">
+           <a href="{% url 'restaurant_detail' review.restaurant.id %}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300">
+
                ยกเลิก
             </a>
             <button type="submit"

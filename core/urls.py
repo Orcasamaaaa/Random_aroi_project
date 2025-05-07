@@ -79,7 +79,6 @@ urlpatterns = [
     path('update-location/', views.update_location, name='update_location'),
     path('export-code/<str:app_name>/', app_to_pdf, name='export_code'),
     path('feedback-food/<int:food_id>/', views.feedback_food, name='feedback_food'),
-
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

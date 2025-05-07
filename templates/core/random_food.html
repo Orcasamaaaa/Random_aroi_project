@@ -4,6 +4,16 @@
 {% block main %}
 <div class="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
     <div class="container mx-auto py-10 px-4">
+    <!-- Location Update Button -->
+<div class="text-center mb-10">
+    <button onclick="getLocation()" class="group bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center mx-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        อัปเดตตำแหน่งของคุณ
+    </button>
+</div>
     {% if messages %}
             <div class="max-w-3xl mx-auto mb-4">
                 {% for message in messages %}
@@ -148,11 +158,12 @@
                     </button>
                 </form>
                 {% else %}
-                <button onclick="openModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg shadow-lg font-semibold transition-transform hover:scale-110">
+               <button onclick="window.location.href='{% url 'login' %}'" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg shadow-lg font-semibold transition-transform hover:scale-110">
                     🔑 กรุณาเข้าสู่ระบบ
                 </button>
                 {% endif %}
             </div>
+
         </div>
         {% endif %}
     </div>
@@ -187,5 +198,51 @@
             }, 1500); // ให้โหลด 1.5 วินาที
         });
     });
+     function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(sendLocation, showError);
+        } else {
+            alert("เบราว์เซอร์ของคุณไม่รองรับการหาตำแหน่ง");
+        }
+    }
+
+    function sendLocation(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+
+        // ส่งข้อมูลไปยัง view 'update_location'
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "{% url 'update_location' %}", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+        xhr.send(JSON.stringify({
+            latitude: latitude,
+            longitude: longitude
+        }));
+
+        xhr.onload = function () {
+            if (xhr.status == 200) {
+                alert("อัปเดตตำแหน่งเรียบร้อยแล้ว!");
+            } else {
+                alert("เกิดข้อผิดพลาดในการอัปเดตตำแหน่ง");
+            }
+        };
+    }
+
+    function showError(error) {
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                alert("คุณไม่ได้อนุญาตให้เข้าถึงตำแหน่ง");
+                break;
+            case error.POSITION_UNAVAILABLE:
+                alert("ไม่สามารถระบุตำแหน่งได้");
+                break;
+            case error.TIMEOUT:
+                alert("การร้องขอข้อมูลตำแหน่งหมดเวลา");
+                break;
+            default:
+                alert("เกิดข้อผิดพลาดบางอย่าง");
+        }
+    }
 </script>
 {% endblock %}

@@ -3,3 +3,5 @@ sklearn
 scikit-learn
 geopy
 geoip2
+matplotlib
+signals
