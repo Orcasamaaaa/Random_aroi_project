@@ -141,12 +141,12 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 11.586V8z" clip-rule="evenodd" />
                             </svg>
-                            สุ่มอาหาร
+                            สุ่มเมนูอาหาร
                         </a>
 
                         <!-- ปุ่มแนะนำอาหาร -->
                        {% if user.is_authenticated %}
-                        <a href="{% url 'recommend_food' %}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm flex items-center shadow-lg transition-transform transform hover:scale-105">
+                        <a href="{% url 'recommend_food2' %}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm flex items-center shadow-lg transition-transform transform hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M8 3a1 1 0 00-2 0v5H5V3a1 1 0 10-2 0v5a3 3 0 003 3v7a1 1 0 102 0v-7a3 3 0 003-3V3a1 1 0 00-2 0v5H8V3zM14 3a1 1 0 011 1v4h2V4a1 1 0 112 0v5a2 2 0 01-2 2v7a1 1 0 11-2 0v-7a2 2 0 01-2-2V4a1 1 0 011-1z" />
                             </svg>

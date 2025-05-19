@@ -75,6 +75,8 @@ urlpatterns = [
     path('superuser/edit-forum/<int:forum_id>/', views.admin_edit_forum, name='edit_forum'),  # แก้ไขกระทู้
     path('superuser/delete-forum/<int:forum_id>/', views.admin_delete_forum, name='delete_forum'),  # ลบกระทู้
     path('recommend-food/', views.recommend_food, name='recommend_food'),
+
+    path('recommend-food2/', views.recommend_food2, name='recommend_food2'),
     path('food/<int:id>/', views.food_detail, name='food_detail'),
     path('update-location/', views.update_location, name='update_location'),
     path('export-code/<str:app_name>/', app_to_pdf, name='export_code'),

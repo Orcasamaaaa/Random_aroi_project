@@ -1300,7 +1300,104 @@ def app_to_pdf(request, app_name):
         response["Content-Disposition"] = f'attachment; filename="{pdf_filename}"'
         return response
 
+def recommend_food2(request):
+    user = request.user
+    liked_foods = LikeDislikeFood.objects.select_related('food', 'user').all()
 
+    if not liked_foods.exists():
+        messages.warning(request, "ยังไม่มีข้อมูลการชอบ/ไม่ชอบของผู้ใช้งานระบบเลย")
+        return render(request, 'core/recommend_food.html', {'recommendations': []})
+
+    foods = Food.objects.all()
+    food_data, food_labels = [], []
+    category_list = set()
+
+    for log in liked_foods:
+        food = log.food
+        category_names = [c.name for c in food.category.all()]
+        category_list.update(category_names)
+
+        # ระยะทาง → คำนวณเฉพาะถ้ามีพิกัดผู้ใช้และร้าน
+        profile = log.user.profile
+        if food.restaurant.latitude and food.restaurant.longitude and profile.latitude and profile.longitude:
+            user_location = (profile.latitude, profile.longitude)
+            restaurant_location = (food.restaurant.latitude, food.restaurant.longitude)
+            distance = geodesic(user_location, restaurant_location).kilometers
+        else:
+            distance = 100
+
+        avg_rating = Review.objects.filter(restaurant=food.restaurant).aggregate(Avg('rating'))['rating__avg'] or 0
+        food_data.append([food.price, distance, avg_rating, *category_names])
+        food_labels.append(1 if log.liked else 0)
+
+    if len(food_data) < 10:
+        messages.warning(request, "ข้อมูลไม่พอในการฝึกโมเดล")
+        return render(request, 'core/recommend_food.html', {'recommendations': []})
+
+    encoder = OneHotEncoder(handle_unknown='ignore')
+    category_array = np.array(list(category_list)).reshape(-1, 1)
+    encoder.fit(category_array)
+
+    transformed_data = []
+    for item in food_data:
+        price, distance, avg_rating = item[:3]
+        category_vector = encoder.transform(np.array(item[3:]).reshape(-1, 1)).toarray().sum(axis=0)
+        transformed_data.append([price, distance, avg_rating] + list(category_vector))
+
+    scaler = MinMaxScaler()
+    scaled_data = scaler.fit_transform(transformed_data)
+
+    X_train, X_test, y_train, y_test = train_test_split(scaled_data, food_labels, test_size=0.2, random_state=42)
+
+    clf = RandomForestClassifier(n_estimators=100, random_state=42)
+    clf.fit(X_train, y_train)
+
+    print("Train Accuracy:", accuracy_score(y_train, clf.predict(X_train)))
+    print("Test Accuracy:", accuracy_score(y_test, clf.predict(X_test)))
+
+    # เตรียมข้อมูลสำหรับการทำนายเมนูที่ยังไม่เคยให้คะแนน
+    rated_food_ids = LikeDislikeFood.objects.filter(user=user).values_list('food_id', flat=True)
+    unseen_foods = foods.exclude(id__in=rated_food_ids)
+    if not unseen_foods.exists():
+        messages.warning(request, "ไม่มีเมนูใหม่ที่ยังไม่เคยให้คะแนน")
+        return render(request, 'core/recommend_food.html', {'recommendations': []})
+
+    unseen_data = []
+    unseen_food_list = []
+    user_profile = user.profile
+
+    for food in unseen_foods:
+        category_names = [c.name for c in food.category.all()]
+        if food.restaurant.latitude and food.restaurant.longitude and user_profile.latitude and user_profile.longitude:
+            user_location = (user_profile.latitude, user_profile.longitude)
+            restaurant_location = (food.restaurant.latitude, food.restaurant.longitude)
+            distance = geodesic(user_location, restaurant_location).kilometers
+        else:
+            distance = 100
+
+        avg_rating = Review.objects.filter(restaurant=food.restaurant).aggregate(Avg('rating'))['rating__avg'] or 0
+        category_vector = encoder.transform(np.array(category_names).reshape(-1, 1)).toarray().sum(axis=0)
+        vector = [food.price, distance, avg_rating] + list(category_vector)
+        unseen_data.append(vector)
+        unseen_food_list.append(food)
+
+    scaled_unseen_data = scaler.transform(unseen_data)
+
+    # ใช้ predict_proba() เพื่อทำนายความน่าจะเป็น
+    probabilities = clf.predict_proba(scaled_unseen_data)
+
+    # ดึงความน่าจะเป็นของคลาส 1 (ชอบ)
+    predictions = probabilities[:, 1]
+
+    # คัดเลือก 5 เมนูที่มีความน่าจะเป็นสูงสุด
+    top_5_indices = predictions.argsort()[-5:][::-1]  # นำ 5 ค่าใหญ่ที่สุดจาก predictions มา
+
+    recommended_foods = [unseen_food_list[i] for i in top_5_indices]
+
+    # แสดงผลลัพธ์
+    return render(request, 'core/recommend_food2.html', {
+        'recommendations': recommended_foods
+    })
 
 
 
